@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -43,6 +44,16 @@ contract AaveRoute is RouteBase {
     ) external override onlyRegistry returns (uint256) {
         uint256 amountWithdrawn = IPool(_vaultAddress).withdraw(_underlying, _amount, _receiver);
         return amountWithdrawn;
+    }
+
+    function borrow(
+        uint256 _amount,
+        uint256 _interestRateMode,
+        address _asset,
+        address _onBehalfOf,
+        address _vaultAddress
+    ) external override onlyRegistry {
+        IPool(_vaultAddress).borrow(_asset, _amount, _interestRateMode, 0, _onBehalfOf);
     }
 
 }

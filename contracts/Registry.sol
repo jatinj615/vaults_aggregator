@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -116,7 +117,7 @@ contract Registry is IXReceiver, Ownable {
             } 
             // if bridge is not required, deposit in the vault
             else {
-                if(routes[_depositRequest[i].routeId].route == address(0)) revert Errors.RouteNotFound(_routeId);
+                if(routes[_depositRequest[i].routeId].route == address(0)) revert Errors.RouteNotFound(_depositRequest[i].routeId);
                 IERC20(_depositRequest[i].underlying).safeTransferFrom(
                     msg.sender, 
                     routes[_depositRequest[i].routeId].route, 
@@ -144,13 +145,32 @@ contract Registry is IXReceiver, Ownable {
         returns(bytes32) 
     {
         _checkUserRequest(
-            _borrowRequest[i].amount, 
-            _borrowRequest[i].onBehalfOf, 
-            _borrowRequest[i].vaultAddress, 
-            _borrowRequest[i].underlying
+            _borrowRequest.amount, 
+            _borrowRequest.onBehalfOf, 
+            _borrowRequest.vaultAddress, 
+            _borrowRequest.underlying
         );
 
+        if (_borrowRequest.bridgeRequest.destinationDomain != connext.domain()) {
+            if (registryForDomains[_borrowRequest.bridgeRequest.destinationDomain] == address(0)) revert Errors.DomainNotSupported();
+            bytes memory _payload = abi.encode(
+                _borrowRequest.routeId,
+                _borrowRequest.onBehalfOf,
+                _borrowRequest.vaultAddress
+            );
 
+        } else {
+            if(routes[_borrowRequest.routeId].route == address(0)) revert Errors.RouteNotFound(_borrowRequest.routeId);
+            _userBorrow(
+                _borrowRequest.routeId,
+                _borrowRequest.amount,
+                _interestRateMode,
+                _borrowRequest.underlying,
+                _borrowRequest.onBehalfOf,
+                _borrowRequest.vaultAddress
+            );
+            return 0x00;
+        }
 
 
     }
@@ -213,13 +233,22 @@ contract Registry is IXReceiver, Ownable {
         _userDeposit(_routeId, _amount, _onBehalfOf, _asset, _vaultAddress);
     }
 
-    /**
 
-     */
     function _userBorrow(
-        uint256
+        uint256 _routeId,
+        uint256 _amount,
+        uint256 _interestRateMode,
+        address _asset,
+        address _onBehalfOf,
+        address _vaultAddress
     ) internal {
-
+        IRoute(routes[_routeId].route).borrow(
+            _amount,
+            _interestRateMode,
+            _asset,
+            _onBehalfOf,
+            _vaultAddress
+        );
     }
 
     /**
@@ -237,7 +266,12 @@ contract Registry is IXReceiver, Ownable {
         address _underlying,
         address _vaultAddress
     ) internal {
-        IRoute(routes[_routeId].route).deposit(_amount, _onBehalfOf, _underlying, _vaultAddress);
+        IRoute(routes[_routeId].route).deposit(
+            _amount, 
+            _onBehalfOf, 
+            _underlying, 
+            _vaultAddress
+        );
     }
 
     /**
