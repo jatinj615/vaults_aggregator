@@ -54,6 +54,8 @@ contract AaveRoute is RouteBase {
         address _vaultAddress
     ) external override onlyRegistry {
         IPool(_vaultAddress).borrow(_asset, _amount, _interestRateMode, 0, _onBehalfOf);
+        // transfer borrowed amount to registry
+        IERC20(_asset).transfer(registry, _amount);
     }
 
 }

@@ -287,6 +287,8 @@ contract Registry is IXReceiver, Ownable {
                 _onBehalfOf,
                 _vaultAddress
             );
+
+            // TODO: send borrowed asset back to source chain
         }
 
     }
