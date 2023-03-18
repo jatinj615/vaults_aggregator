@@ -16,6 +16,11 @@ contract Registry is IXReceiver, Ownable {
 
     IConnext public immutable connext;
 
+    enum RequestType {
+        DEPOSIT,
+        BORROW
+    }
+
     struct RouteData {
         address route;
         bool isEnabled;
@@ -91,10 +96,14 @@ contract Registry is IXReceiver, Ownable {
             // Check destination domain if not same as current domain, need to bridge
             if (_depositRequest[i].bridgeRequest.destinationDomain != connext.domain()) {
                 if (registryForDomains[_depositRequest[i].bridgeRequest.destinationDomain] == address(0)) revert Errors.DomainNotSupported();
-                bytes memory _payload = abi.encode(
-                    _depositRequest[i].routeId,
+                bytes memory _params = abi.encode(
                     _depositRequest[i].onBehalfOf,
                     _depositRequest[i].vaultAddress
+                );
+                bytes memory _payload = abi.encode(
+                    RequestType.DEPOSIT,
+                    _depositRequest[i].routeId,
+                    _params
                 );
 
                 // User sends funds to this contract
@@ -102,6 +111,7 @@ contract Registry is IXReceiver, Ownable {
                 // This contract approves transfer to Connext
                 IERC20(_depositRequest[i].underlying).safeApprove(address(connext), _depositRequest[i].amount);
 
+                // send xcall
                 bytes32 transferId = connext.xcall{value: _depositRequest[i].bridgeRequest.relayerFee}(
                     _depositRequest[i].bridgeRequest.destinationDomain, 
                     registryForDomains[_depositRequest[i].bridgeRequest.destinationDomain], 
@@ -153,10 +163,19 @@ contract Registry is IXReceiver, Ownable {
 
         if (_borrowRequest.bridgeRequest.destinationDomain != connext.domain()) {
             if (registryForDomains[_borrowRequest.bridgeRequest.destinationDomain] == address(0)) revert Errors.DomainNotSupported();
-            bytes memory _payload = abi.encode(
-                _borrowRequest.routeId,
+            // encode the params for borrow 
+            bytes memory _params = abi.encode(
+                _borrowRequest.amount,
+                _interestRateMode,
                 _borrowRequest.onBehalfOf,
+                _borrowRequest.underlying,
                 _borrowRequest.vaultAddress
+            );
+            // for 
+            bytes memory _payload = abi.encode(
+                RequestType.BORROW,
+                _borrowRequest.routeId,
+                _params
             );
 
         } else {
@@ -221,16 +240,36 @@ contract Registry is IXReceiver, Ownable {
         bytes memory _callData
     ) external onlySource(_originSender, _origin) returns (bytes memory) {
         (
+            RequestType _request,
             uint256 _routeId,
-            address _onBehalfOf,
-            address _vaultAddress
-        ) = abi.decode(_callData, (uint256, address, address));
+            bytes memory _params
+        ) = abi.decode(_callData, (RequestType, uint256, bytes));
+
+        // check if route exists
         if(routes[_routeId].route == address(0)) revert Errors.RouteNotFound(_routeId);
 
-        IERC20(_asset).safeTransfer(routes[_routeId].route, _amount);
-        // TODO: check for input params if required
-        // TODO: check for revert with try catch
-        _userDeposit(_routeId, _amount, _onBehalfOf, _asset, _vaultAddress);
+        // check for the request type
+        if (_request == RequestType.DEPOSIT) {
+            (address _onBehalfOf, address _vaultAddress) = abi.decode(_params, (address, address));
+            IERC20(_asset).safeTransfer(routes[_routeId].route, _amount);
+            // TODO: check for input params if required
+            // TODO: check for revert with try catch
+            _userDeposit(_routeId, _amount, _onBehalfOf, _asset, _vaultAddress);
+        } else if (_request == RequestType.BORROW) {
+            (
+                uint256 _borrowAmount,
+                uint256 _interestRateMode,
+                address _onBehalfOf,
+                address _borrowUnderlying,
+                address _vaultAddress
+            ) = abi.decode(_params, (uint256, uint256, address, address, address));
+            // supply the asset as collatoral
+            IERC20(_asset).safeTransfer(routes[_routeId].route, _amount);
+            _userDeposit(_routeId, _amount, _onBehalfOf, _asset, _vaultAddress);
+            // borrow the asset
+            // _userBorrow();
+        }
+
     }
 
 
