@@ -100,6 +100,7 @@ contract Registry is IXReceiver, Ownable {
                     _depositRequest[i].onBehalfOf,
                     _depositRequest[i].vaultAddress
                 );
+                // payload for xcall
                 bytes memory _payload = abi.encode(
                     RequestType.DEPOSIT,
                     _depositRequest[i].routeId,
@@ -171,12 +172,26 @@ contract Registry is IXReceiver, Ownable {
                 _borrowRequest.underlying,
                 _borrowRequest.vaultAddress
             );
-            // for 
+            // payload for xcall 
             bytes memory _payload = abi.encode(
                 RequestType.BORROW,
                 _borrowRequest.routeId,
                 _params
             );
+
+            // send xcall
+            bytes32 transferId = connext.xcall{value: _depositRequest[i].bridgeRequest.relayerFee}(
+                _depositRequest[i].bridgeRequest.destinationDomain, 
+                registryForDomains[_depositRequest[i].bridgeRequest.destinationDomain], 
+                address(0),
+                address(0), 
+                0, 
+                0, 
+                _payload
+            );
+
+            emit Bridged(msg.sender, transferId);
+            return transferId;
 
         } else {
             if(routes[_borrowRequest.routeId].route == address(0)) revert Errors.RouteNotFound(_borrowRequest.routeId);
@@ -276,26 +291,34 @@ contract Registry is IXReceiver, Ownable {
 
     }
 
-
+    /**
+     @notice Borrow specified assets from the vault
+     @param _routeId Id of the route to follow
+     @param _amount amount of underlying to deposit
+     @param _interestRateMode type of interest rate mode
+     @param _borrowAsset address of the asset to borrow
+     @param _onBehalfOf address of the receiver to get yield tokens
+     @param _vaultAddress address of vault to deposit
+     */
     function _userBorrow(
         uint256 _routeId,
         uint256 _amount,
         uint256 _interestRateMode,
-        address _asset,
+        address _borrowAsset,
         address _onBehalfOf,
         address _vaultAddress
     ) internal {
         IRoute(routes[_routeId].route).borrow(
             _amount,
             _interestRateMode,
-            _asset,
+            _borrowAsset,
             _onBehalfOf,
             _vaultAddress
         );
     }
 
     /**
-     @notice Check User Request params, reverts if invalid
+     @notice Deposit User assets in specified vault
      @param _routeId Id of the route to follow
      @param _amount amount of underlying to deposit
      @param _onBehalfOf address of the receiver to get yield tokens
