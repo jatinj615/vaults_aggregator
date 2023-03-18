@@ -263,11 +263,15 @@ contract Registry is IXReceiver, Ownable {
                 address _borrowUnderlying,
                 address _vaultAddress
             ) = abi.decode(_params, (uint256, uint256, address, address, address));
-            // supply the asset as collatoral
-            IERC20(_asset).safeTransfer(routes[_routeId].route, _amount);
-            _userDeposit(_routeId, _amount, _onBehalfOf, _asset, _vaultAddress);
             // borrow the asset
-            // _userBorrow();
+            _userBorrow(
+                _routeId,
+                _borrowAmount,
+                _interestRateMode,
+                _asset,
+                _onBehalfOf,
+                _vaultAddress
+            );
         }
 
     }
