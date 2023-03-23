@@ -1,88 +1,76 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { CardContent, CardHeader, Divider, Grid, useTheme } from '@mui/material';
 
 import Title from 'components/Common/Title';
 import { Card } from 'components/Common/Card';
 import LabelValue from 'components/Common/LabelValue';
 import SkeletonLoader from 'components/Common/SkeletonLoader';
-
-const buckets = [
-  {
-    bucketName: 'Blue Chip',
-    bucketPrice: '1.00',
-    bucketTVL: '1.00',
-    tokens: [
-      { tokenName: 'BTC', tokenPercentage: '40%' },
-      { tokenName: 'ETH', tokenPercentage: '30%' },
-      { tokenName: 'MATIC', tokenPercentage: '20%' },
-      { tokenName: 'LINK', tokenPercentage: '10%' }
-    ]
-  },
-  {
-    bucketName: 'Metaverse',
-    bucketPrice: '0.88',
-    bucketTVL: '6.42',
-    tokens: [
-      { tokenName: 'APE', tokenPercentage: '40%' },
-      { tokenName: 'MANA', tokenPercentage: '30%' },
-      { tokenName: 'SAND', tokenPercentage: '30%' }
-    ]
-  },
-  {
-    bucketName: 'Stable Coins',
-    bucketPrice: '1.50',
-    bucketTVL: '6.51',
-    tokens: [
-      { tokenName: 'USDC', tokenPercentage: '40%' },
-      { tokenName: 'USDT', tokenPercentage: '30%' },
-      { tokenName: 'DAI', tokenPercentage: '30%' }
-    ]
-  }
-];
+import { useGetExistingBuckets } from 'hooks/api/getExistingBuckets';
+import CustomNoRowsOverlay from '../Common/CustomNoRowsOverlay';
 
 type Props = {};
 
 export default function ExistingBuckets({}: Props) {
   const theme = useTheme();
-  const [loading, setLoading] = useState(false);
+  const { data: existingBucketsData = [], isLoading, isFetching } = useGetExistingBuckets();
+  const loading = isFetching || isLoading;
 
   return (
     <>
-      <Title titleText="Existing Bucket | Scaling 2023" />
-      <Grid mt={2} mb={4} container item spacing={4}>
-        {buckets.map((bucket, index) => (
-          <Grid key={index} xs={12} sm={6} md={4} lg={3} item>
-            <Card sx={{ cursor: 'pointer', width: '100%', maxWidth: 450 }}>
-              <CardHeader
-                subheader={bucket.bucketName}
-                subheaderTypographyProps={{ sx: { fontWeight: theme.typography.fontWeightBold } }}
-              />
-              <Divider />
-              <CardContent>
-                <Grid container item justifyContent="space-between">
-                  <Grid item xs={6}>
-                    <LabelValue
-                      label="Bucket Price ($)"
-                      value={loading ? <SkeletonLoader width="80%" /> : bucket.bucketPrice}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <LabelValue label="TVL ($)" value={loading ? <SkeletonLoader width="80%" /> : bucket.bucketTVL} />
-                  </Grid>
-                  {bucket.tokens.map((token, index) => (
-                    <Grid key={index} item>
+      <Title titleText="Existing Bucket | Vault Aggregator" />
+      {loading ? (
+        <Card sx={{ cursor: 'wait', width: '100%', maxWidth: 450, mt: 6 }}>
+          <CardHeader
+            subheader={<SkeletonLoader width="20%" />}
+            subheaderTypographyProps={{ sx: { fontWeight: theme.typography.fontWeightBold } }}
+          />
+          <Divider />
+          <CardContent>
+            <Grid container>
+              <Grid item xs={12}>
+                <LabelValue label="Bucket Yield Percentage" value={<SkeletonLoader width="20%" />} />
+              </Grid>
+              <Grid item>
+                <LabelValue label={<SkeletonLoader width={50} />} value={<SkeletonLoader width={50} />} />
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      ) : existingBucketsData.length ? (
+        <Grid mt={2} mb={4} container spacing={4}>
+          {existingBucketsData.map((bucket, index) => (
+            <Grid key={index} xs={12} sm={6} md={4} lg={3} item>
+              <Card sx={{ cursor: 'pointer', width: '100%', maxWidth: 450 }}>
+                <CardHeader
+                  subheader={bucket.name || `Bucket ${index + 1}`}
+                  subheaderTypographyProps={{ sx: { fontWeight: theme.typography.fontWeightBold } }}
+                />
+                <Divider />
+                <CardContent>
+                  <Grid container>
+                    <Grid item xs={12}>
                       <LabelValue
-                        label={loading ? <SkeletonLoader width="80%" /> : token.tokenName}
-                        value={loading ? <SkeletonLoader width="80%" /> : token.tokenPercentage}
+                        label="Bucket Yield Percentage"
+                        value={loading ? <SkeletonLoader width="20%" /> : `${bucket.bucketYieldPercentage || 0} %`}
                       />
                     </Grid>
-                  ))}
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                    {bucket.constituents.map((token, index) => (
+                      <Grid key={index} item>
+                        <LabelValue
+                          label={loading ? <SkeletonLoader width={50} /> : token.tokenSymbol}
+                          value={loading ? <SkeletonLoader width={50} /> : `${token.yieldPercentage || 0} %`}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <CustomNoRowsOverlay noRowsMessage="You do not have any buckets! Create one using the + icon" />
+      )}
     </>
   );
 }

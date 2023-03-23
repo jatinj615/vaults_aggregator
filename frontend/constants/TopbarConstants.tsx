@@ -13,13 +13,14 @@ export const TopbarItems: TopbarInterface[] = [
     text: 'EXISTING BUCKETS',
     icon: () => <FixedRatesIcon />,
     title: 'Existing Buckets',
-    subtitle: 'Edit or use existing buckets from here'
+    subtitle: 'Edit or use existing buckets here'
   },
   {
-    link: '/new-bucket',
-    text: 'NEW BUCKET',
+    link: '/my-buckets',
+    text: 'MY BUCKETS',
     icon: () => <DepositIcon />,
-    title: 'New Bucket',
-    subtitle: 'Create a new bucket'
+    title: 'My Buckets',
+    subtitle: 'View your existing buckets or create a new bucket',
+    patterns: [/new-bucket/]
   }
 ];
