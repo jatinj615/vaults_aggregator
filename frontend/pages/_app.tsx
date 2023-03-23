@@ -74,9 +74,9 @@ const store = createStore<StoreModel>(globalStore);
 export default function UnrealApp({ Component, pageProps }: AppProps) {
   // * initiate apollo
   const apolloClient = useApollo(pageProps);
-  const [toastdata, setToastData] = useState();
+  const [toastData, setToastData] = useState();
   const [showConnectWalletModal, setShowConnectWalletModal] = useState<boolean>(false);
-  const value = { toastdata, setToastData, showConnectWalletModal, setShowConnectWalletModal };
+  const value = { toastData, setToastData, showConnectWalletModal, setShowConnectWalletModal };
 
   return (
     <StoreProvider store={store}>

@@ -34,7 +34,6 @@ export function getExplorerLink(data: string, type: ExplorerDataType): string {
 
 export * from './calc';
 export * from './formatNumber';
-export * from './getBalances';
 export * from './getCoinGecko';
 export * from './getEthereumProviderLibrary';
 export * from './storage';

@@ -32,6 +32,7 @@ interface IState {
 
 export default class ToastComponent extends React.Component<{}> {
   static contextType = ToastContext;
+  declare context: React.ContextType<typeof ToastContext>;
   interval: any;
 
   constructor(props: any) {
@@ -87,7 +88,7 @@ export default class ToastComponent extends React.Component<{}> {
   };
 
   render() {
-    const toastdata = this.context.toastdata;
+    const toastdata = this.context.toastData;
 
     return (
       <Toaster

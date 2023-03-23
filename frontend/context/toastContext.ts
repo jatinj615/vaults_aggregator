@@ -19,7 +19,7 @@ export interface ToastDataInterface {
 
 export interface ToastContextInterface {
   toastData?: {
-    [key: string]: ToastDataInterface[];
+    [key: string]: ToastDataInterface;
   };
   setToastData?: Dispatch<SetStateAction<ToastDataInterface>>;
   showConnectWalletModal?: boolean;
@@ -27,4 +27,4 @@ export interface ToastContextInterface {
 }
 
 // * ToastContext to get and set toast specific data
-export const ToastContext = React.createContext<ToastContextInterface>({} as ToastContextInterface);
+export const ToastContext = React.createContext<ToastContextInterface>({});
