@@ -180,9 +180,9 @@ contract Registry is IXReceiver, Ownable {
             );
 
             // send xcall
-            bytes32 transferId = connext.xcall{value: _depositRequest[i].bridgeRequest.relayerFee}(
-                _depositRequest[i].bridgeRequest.destinationDomain, 
-                registryForDomains[_depositRequest[i].bridgeRequest.destinationDomain], 
+            bytes32 transferId = connext.xcall{value: _borrowRequest.bridgeRequest.relayerFee}(
+                _borrowRequest.bridgeRequest.destinationDomain, 
+                registryForDomains[_borrowRequest.bridgeRequest.destinationDomain], 
                 address(0),
                 address(0), 
                 0, 
@@ -283,7 +283,7 @@ contract Registry is IXReceiver, Ownable {
                 _routeId,
                 _borrowAmount,
                 _interestRateMode,
-                _asset,
+                _borrowUnderlying,
                 _onBehalfOf,
                 _vaultAddress
             );
