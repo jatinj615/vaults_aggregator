@@ -27,12 +27,13 @@ import { constantStrings } from 'utils/constants';
 import { bnum, ZERO } from 'utils/poolCalc/utils/bignumber';
 import { useWeb3React } from '@web3-react/core';
 import { Web3Provider } from '@ethersproject/providers';
-import { SUPPORTED_NETWORK } from 'constants/networkNames';
+import { SUPPORTED_NETWORK, SUPPORTED_NETWORKS } from 'constants/networkNames';
 import { getCurrencyPath } from 'constants/currencyPaths';
 import { ToastContext } from 'context/toastContext';
 import WalletIcon from 'icons/WalletIcon';
 import IObject from 'interfaces/iobject.interface';
 import useERC20 from 'hooks/useERC20';
+import { NetworkName } from 'enums';
 
 interface IInvestModalProps {
   showDialog: boolean;
@@ -83,7 +84,7 @@ export default function InvestModal({
   otAddress,
   ytAddress,
   streamKey,
-  underlying = 'atoken.id from aavedata api',
+  underlying,
   underlyingDecimals,
   constituents
 }: IInvestModalProps) {
@@ -140,7 +141,7 @@ export default function InvestModal({
         setAmountPercentage(0);
         setotAmount('');
         setytAmount('');
-        // const balance = await underlyingToken.getBalance();
+        const balance = await underlyingToken.getBalance();
         setBalance(balance);
         // const limit = await underlyingToken.getAllowance(core.address);
         // setApprovedLimit(limit);
@@ -162,7 +163,7 @@ export default function InvestModal({
     }, 500)
   ).current;
 
-  const handleInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInput = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     if (e.target.value) {
       const balanceFormatted = bnum(ethers.utils.formatUnits(balance, underlyingDecimals));
       const newValue = balanceFormatted.gt(ZERO)
@@ -241,11 +242,34 @@ export default function InvestModal({
     };
   }, [getOTYTCountDebounced]);
 
+  useEffect(() => {
+    const fetch = async () => {
+      if (underlyingToken?.approve && loading) {
+        try {
+          const symbol = await underlyingToken.symbol();
+          setUnderlyingSymbol(symbol);
+
+          const balance = await underlyingToken.getBalance();
+          setBalance(balance);
+
+          // const limit = await underlyingToken.getAllowance(core.address);
+          // setApprovedLimit(limit);
+        } catch (error) {
+          console.error('Error from deposit card modal ERC20 API', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetch();
+  }, [underlyingToken, loading]);
+
   const getAvailableBalance = () => {
     if (!active) {
       return 'No wallet connected';
     }
-    if (loading && network === SUPPORTED_NETWORK) {
+    if (loading && SUPPORTED_NETWORKS.includes(network as NetworkName)) {
       return (
         <Grid container item wrap="nowrap" columnGap={1}>
           <SkeletonLoader width={50} /> {underlyingSymbol}
@@ -333,16 +357,17 @@ export default function InvestModal({
             <Grid item key={index}>
               <MaxInput
                 id={`constituent-amount-${index}`}
-                primaryText={loading ? <SkeletonLoader width="80%" /> : 'For'}
-                secondaryText={loading ? <SkeletonLoader width="60%" /> : `Balance: ${getAvailableBalance()}`}
+                primaryText={
+                  loading ? <SkeletonLoader width="100px" /> : `${constituent.tokenSymbol} - ${constituent.network}`
+                }
                 value={amount}
+                step={0.01}
                 disabled={!(active && network === SUPPORTED_NETWORK) || loading}
                 error={amountError}
                 errorMessage={`Not enough ${underlyingSymbol} or invalid amount`}
                 placeholder="Enter amount"
-                handleInput={handleInput}
+                handleInput={(e: React.ChangeEvent<HTMLInputElement>) => handleInput(e, index)}
                 handleClickMaxBtn={handleClickMaxBtn}
-                customStyles={{ bgcolor: theme.palette.background.default }}
               />
             </Grid>
           ))}

@@ -1,6 +1,6 @@
 import { Grid, Slide, Typography, useTheme } from '@mui/material';
 import { DataGrid, DATA_GRID_PROPS_DEFAULT_VALUES, GridSelectionModel } from '@mui/x-data-grid';
-import { darken, lighten } from '@mui/material/styles';
+import { darken, lighten, Theme } from '@mui/material/styles';
 import { useWeb3React } from '@web3-react/core';
 import { Web3Provider } from '@ethersproject/providers';
 
@@ -13,12 +13,12 @@ import { SUPPORTED_NETWORKS } from 'constants/networkNames';
 import { getOTYTBalancesColumns, portfolioDatagridRowHeight } from 'utils/datagrid';
 import { NetworkName } from 'enums';
 import { useEffect, useState } from 'react';
-import IObject from 'interfaces/iobject.interface';
 import { useGetAaveData } from 'hooks/api/getAaveData';
+import { useGetPortfolioData } from 'hooks/api/getPortfolioData';
 
-const getHoverBackgroundColor = (theme) =>
+const getHoverBackgroundColor = (theme: Theme) =>
   theme.palette.mode === 'dark'
-    ? `${darken(theme.palette.info.main, 0.2)}, ${darken(theme.palette.info.dark, 0.5)}`
+    ? `${lighten(theme.palette.secondary.main, 0.1)}, ${lighten(theme.palette.secondary.dark, 0.3)}`
     : `${lighten(theme.palette.info.light, 0.4)}, ${lighten(theme.palette.info.main, 0.1)}`;
 
 const getNoRowsCustomStyles = (theme) => ({
@@ -38,16 +38,23 @@ type Props = {};
 export default function MyPortfolio({}: Props) {
   const { network } = useStoreState((state) => state);
   const theme = useTheme();
-  const { active } = useWeb3React<Web3Provider>();
-  const { data: aaveData = [], isLoading, isFetching } = useGetAaveData();
-  const [portfolioRowsData, setPortfolioRowsData] = useState<IObject[]>([]);
+  const { account, active } = useWeb3React<Web3Provider>();
+  const {
+    data: aaveData = [],
+    isInitialLoading: isAaveDataInitLoading,
+    isLoading: isAaveDataLoading,
+    isFetching: isAaveDataFetching
+  } = useGetAaveData();
+  const {
+    data: portfolioRowsData = [],
+    isInitialLoading: isPortfolioBalancesInitLoading,
+    isLoading: isPortfolioBalancesLoading,
+    isFetching: isPortfolioBalancesFetching
+  } = useGetPortfolioData(account, aaveData);
+
   const [selectionModel, setSelectionModel] = useState<GridSelectionModel>([]);
 
-  const loading = isLoading || isFetching;
-
-  useEffect(() => {
-    setPortfolioRowsData(aaveData);
-  }, [aaveData]);
+  const loading = isAaveDataLoading || isAaveDataFetching || isPortfolioBalancesLoading || isPortfolioBalancesFetching;
 
   const handleSelectionModelChange = (newSelectionModel: GridSelectionModel) => {
     setSelectionModel(newSelectionModel);
@@ -81,7 +88,7 @@ export default function MyPortfolio({}: Props) {
   };
 
   const getDatagridHeight = (noOfRows: number): number => {
-    if (loading) {
+    if (isAaveDataInitLoading || isPortfolioBalancesInitLoading) {
       return headerHeight + portfolioDatagridRowHeight + 10;
     }
     if (noOfRows) {

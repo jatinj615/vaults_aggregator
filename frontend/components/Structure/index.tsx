@@ -198,7 +198,7 @@ export default function Structure({ children }: StructureProps) {
                         <CircleIcon
                           sx={{
                             '&.MuiChip-icon': {
-                              color: 'success.light',
+                              color: 'success.main',
                               fontSize: '0.6rem'
                             }
                           }}

@@ -9,7 +9,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 const getHoverBackgroundColor = (theme) =>
   theme.palette.mode === 'dark'
-    ? `${darken(theme.palette.info.main, 0.3)}, ${darken(theme.palette.info.dark, 0.5)}`
+    ? `${lighten(theme.palette.secondary.main, 0.1)}, ${lighten(theme.palette.secondary.dark, 0.3)}`
     : `${lighten(theme.palette.info.main, 0.1)}, ${lighten(theme.palette.info.light, 0.4)}`;
 
 type Props = {

@@ -102,7 +102,7 @@ const MaxInput = ({
               </Box>
             )}
           </Grid>
-          <Grid item>
+          {/* <Grid item>
             <Button
               sx={{ py: 0, minWidth: 'min-content' }}
               id={`max-input-btn-${id}`}
@@ -113,7 +113,7 @@ const MaxInput = ({
             >
               MAX
             </Button>
-          </Grid>
+          </Grid> */}
         </Grid>
         <Grid container item alignItems="center" justifyContent="space-between">
           <Grid item xs>

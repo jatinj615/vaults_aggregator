@@ -13,16 +13,20 @@ import { useWeb3React } from '@web3-react/core';
 import { Web3Provider } from '@ethersproject/providers';
 import InvestModal from '../Modal/InvestModal';
 import IObject from 'interfaces/iobject.interface';
+import { useStoreState } from 'store/globalStore';
+import { ChainNameFromWethAddress } from 'constants/networkNames';
 
 type Props = {};
 
 export default function ExploreBuckets({}: Props) {
+  const { network } = useStoreState((state) => state);
   const theme = useTheme();
   const router = useRouter();
   const { account } = useWeb3React<Web3Provider>();
   const { data: exploreBucketsData = [], isLoading, isFetching } = useGetExploreBuckets(account);
   const loading = isFetching || isLoading;
   const [showInvestModal, setShowInvestModal] = useState(false);
+  const [underlying, setUnderlying] = useState('');
   const [constituents, setConstituents] = useState<IObject[]>([]);
 
   const handleClickNewBucketBtn = () => {
@@ -35,11 +39,13 @@ export default function ExploreBuckets({}: Props) {
 
   const resetInvestModal = () => {
     setConstituents([]);
+    setUnderlying('');
   };
 
   const handleCardClick = (bucket: IObject) => {
     resetInvestModal();
     setConstituents(bucket.constituents);
+    setUnderlying(ChainNameFromWethAddress[network]);
     setShowInvestModal(true);
   };
 
@@ -56,7 +62,7 @@ export default function ExploreBuckets({}: Props) {
           otAddress={'otAddress'}
           ytAddress={'ytAddress'}
           streamKey={'streamKey'}
-          underlying={'underlying'}
+          underlying={underlying}
           underlyingDecimals={18}
           constituents={constituents}
         />

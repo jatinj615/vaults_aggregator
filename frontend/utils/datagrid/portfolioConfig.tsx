@@ -60,7 +60,7 @@ export const getOTYTBalancesColumns = (): GridColumns => {
       disableColumnMenu: true
     },
     {
-      field: 'balance',
+      field: 'tokenBalance',
       headerName: 'Total Balance',
       minWidth: portfolioOTYTBalancesColumns.totalBalance.minWidth,
       flex: 1,

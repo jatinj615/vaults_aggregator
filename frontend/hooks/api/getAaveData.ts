@@ -12,7 +12,9 @@ export function useGetAaveData(): UseQueryResult<IObject[]> {
         .then(({ data }) => map(data.data, (row: any) => createRowObject(row)))
         .catch((err) => {
           console.error('Error while fetching get aave data', err);
-        })
+        }),
+    staleTime: Infinity,
+    cacheTime: Infinity
   });
 }
 
@@ -38,6 +40,7 @@ const createRowObject = (row) => {
   rowObject.aToken = row.aToken.id;
   rowObject.pool = row.pool.pool;
   rowObject.underlyingAddress = row.underlyingAsset;
+  rowObject.aTokenId = row.aToken.id;
   rowObject.id = row.aToken.id;
   rowObject.yieldPercentage = row.yield_percentage;
 
