@@ -38,8 +38,6 @@ interface IInvestModalProps {
   showDialog: boolean;
   setShowDialog: (showDialog: boolean) => void;
   underlyingTokenSymbol: string;
-  otSymbol: string;
-  ytSymbol: string;
   durationSeconds: number;
   protocol: string;
   otAddress: string;
@@ -80,8 +78,6 @@ export default function InvestModal({
   showDialog,
   setShowDialog,
   underlyingTokenSymbol,
-  otSymbol,
-  ytSymbol,
   durationSeconds,
   protocol,
   otAddress,
@@ -290,14 +286,6 @@ export default function InvestModal({
     }
   };
 
-  const isSliderDisabled = () => {
-    return (
-      bnum(ethers.utils.formatUnits(balance, underlyingDecimals)).lte(ZERO) ||
-      !(active && network === SUPPORTED_NETWORK) ||
-      loading
-    );
-  };
-
   return (
     <Dialog
       open={showDialog}
@@ -315,7 +303,7 @@ export default function InvestModal({
           <Grid item xs={6} container direction="column">
             <Grid item>
               <Typography variant="caption" display="block" gutterBottom>
-                Mint ownership and yield tokens using
+                Vaults in this bucket for
               </Typography>
             </Grid>
             <Grid container spacing={1.5} item alignItems="center">
@@ -340,20 +328,25 @@ export default function InvestModal({
             </Grid>
           </Grid>
         </Grid>
-        {constituents.map((constituent, index) => (
-          <MaxInput
-            key={index}
-            id={`constituent-amount-${index}`}
-            value={amount}
-            disabled={!(active && network === SUPPORTED_NETWORK) || loading}
-            error={amountError}
-            errorMessage={`Not enough ${underlyingSymbol} or invalid amount`}
-            placeholder="Enter amount"
-            handleInput={handleInput}
-            handleClickMaxBtn={handleClickMaxBtn}
-            customStyles={{ bgcolor: theme.palette.background.default }}
-          />
-        ))}
+        <Grid item container direction="column" rowSpacing={2}>
+          {constituents.map((constituent, index) => (
+            <Grid item key={index}>
+              <MaxInput
+                id={`constituent-amount-${index}`}
+                primaryText={loading ? <SkeletonLoader width="80%" /> : 'For'}
+                secondaryText={loading ? <SkeletonLoader width="60%" /> : `Balance: ${getAvailableBalance()}`}
+                value={amount}
+                disabled={!(active && network === SUPPORTED_NETWORK) || loading}
+                error={amountError}
+                errorMessage={`Not enough ${underlyingSymbol} or invalid amount`}
+                placeholder="Enter amount"
+                handleInput={handleInput}
+                handleClickMaxBtn={handleClickMaxBtn}
+                customStyles={{ bgcolor: theme.palette.background.default }}
+              />
+            </Grid>
+          ))}
+        </Grid>
         <ApprovalCard
           approvalPending={approvalPending}
           approvalMessage={approvalMessage}

@@ -51,8 +51,6 @@ export default function ExploreBuckets({}: Props) {
           showDialog={showInvestModal}
           setShowDialog={handleShowInvestModal}
           underlyingTokenSymbol={'WETH'}
-          otSymbol={'otSymbol'}
-          ytSymbol={'ytSymbol'}
           durationSeconds={0}
           protocol={'protocol'}
           otAddress={'otAddress'}

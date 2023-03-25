@@ -45,6 +45,7 @@ const MaxInput = ({
   secondaryText,
   disabled = false,
   value,
+  step = 1,
   error = false,
   errorMessage,
   placeholder,
@@ -64,7 +65,8 @@ const MaxInput = ({
     <>
       <Grid
         container
-        p={3}
+        direction="column"
+        p={1}
         alignItems="center"
         justifyContent="space-between"
         sx={{
@@ -80,75 +82,96 @@ const MaxInput = ({
           ref?.current?.focus();
         }}
       >
-        <Grid item xs={5}>
-          {/* Incase of an error we'll not show this block */}
-          {error ? (
-            <></>
-          ) : (
-            <Stack spacing={1}>
-              <Box
-                sx={{
-                  color: theme.palette.text.primary,
-                  fontWeight: theme.typography.fontWeightRegular,
-                  fontSize: theme.typography.pxToRem(16),
-                  lineHeight: theme.typography.pxToRem(18),
-                  letterSpacing: theme.typography.pxToRem(0.385075)
-                }}
-              >
-                {primaryText}
-              </Box>
+        <Grid container item alignItems="center" justifyContent="space-between">
+          <Grid item>
+            {/* Incase of an error we'll not show this block */}
+            {error ? (
+              <></>
+            ) : (
               <Box
                 sx={{
                   color: theme.palette.text.primary,
                   fontWeight: theme.typography.fontWeightRegular,
                   fontSize: theme.typography.pxToRem(14),
-                  lineHeight: theme.typography.pxToRem(16),
-                  letterSpacing: theme.typography.pxToRem(0.385075)
+                  lineHeight: theme.typography.pxToRem(21),
+                  letterSpacing: theme.typography.pxToRem(0.385075),
+                  pl: 0.625
+                }}
+              >
+                {primaryText}
+              </Box>
+            )}
+          </Grid>
+          <Grid item>
+            <Button
+              sx={{ py: 0, minWidth: 'min-content' }}
+              id={`max-input-btn-${id}`}
+              size="small"
+              variant="text"
+              disabled={disabled}
+              onClick={handleClickMaxBtn}
+            >
+              MAX
+            </Button>
+          </Grid>
+        </Grid>
+        <Grid container item alignItems="center" justifyContent="space-between">
+          <Grid item xs>
+            <Stack direction="row" alignItems="center">
+              <StyledTextField
+                id={`select-input-${id}`}
+                type="number"
+                placeholder={placeholder}
+                disabled={disabled}
+                error={error}
+                variant="outlined"
+                value={value}
+                onChange={handleInput}
+                onWheel={handleWheel}
+                inputProps={{ min: 0, step }}
+                fullWidth
+                {...restProps}
+              />
+            </Stack>
+          </Grid>
+          {
+            // for errors show this icon
+            error ? (
+              <ErrorIcon
+                sx={{
+                  position: 'absolute',
+                  left: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: theme.palette.error.dark
+                }}
+              />
+            ) : (
+              <></>
+            )
+          }
+        </Grid>
+        <Grid container item alignItems="center" justifyContent="space-between">
+          <Grid item xs>
+            {/* Incase of an error we'll not show this block */}
+            {error ? (
+              <></>
+            ) : (
+              <Box
+                sx={{
+                  color: theme.palette.text.primary,
+                  fontWeight: theme.typography.fontWeightRegular,
+                  fontSize: theme.typography.pxToRem(14),
+                  lineHeight: theme.typography.pxToRem(21),
+                  letterSpacing: theme.typography.pxToRem(0.385075),
+                  pl: 0.625
                 }}
               >
                 {secondaryText}
               </Box>
-            </Stack>
-          )}
+            )}
+          </Grid>
         </Grid>
-        <Grid item xs={6}>
-          <Stack direction="row">
-            <StyledTextField
-              id={`max-input-${id}`}
-              type="number"
-              placeholder={placeholder}
-              disabled={disabled}
-              error={error}
-              variant="outlined"
-              value={value}
-              onChange={handleInput}
-              onWheel={handleWheel}
-              inputProps={{ min: 0 }}
-              fullWidth
-              {...restProps}
-            />
-            <Divider sx={{ ml: 2, mr: 1 }} orientation="vertical" variant="middle" flexItem />
-            <Button id={`max-input-btn-${id}`} variant="text" disabled={disabled} onClick={handleClickMaxBtn}>
-              MAX
-            </Button>
-          </Stack>
-        </Grid>
-        {
-          // for errors show this icon
-          error ? (
-            <ErrorIcon
-              sx={{
-                position: 'absolute',
-                left: 32,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: theme.palette.error.dark
-              }}
-            />
-          ) : (
-            <></>
-          )
-        }
       </Grid>
       {/* error text */}
       {error ? (

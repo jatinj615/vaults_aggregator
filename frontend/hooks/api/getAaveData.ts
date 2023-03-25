@@ -12,9 +12,7 @@ export function useGetAaveData(): UseQueryResult<IObject[]> {
         .then(({ data }) => map(data.data, (row: any) => createRowObject(row)))
         .catch((err) => {
           console.error('Error while fetching get aave data', err);
-        }),
-    staleTime: Infinity,
-    cacheTime: Infinity
+        })
   });
 }
 
@@ -31,6 +29,7 @@ const createRowObject = (row) => {
   const rowObject: IObject = {};
   rowObject.name = row.name;
   rowObject.symbol = row.name;
+  rowObject.tokenSymbol = 'aEthWETH';
   rowObject.vaultSymbol = 'AAVE WETH';
   rowObject.totalLiquidity = row.totalLiquidity;
   rowObject.liquidityRate = row.liquidityRate;
