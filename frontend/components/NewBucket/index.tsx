@@ -41,7 +41,7 @@ export default function NewBucket({}: Props) {
   const { account } = useWeb3React<Web3Provider>();
   const { data: aaveData = [], isLoading, isFetching } = useGetAaveData();
   const loading = isFetching || isLoading;
-  const { mutate, isError, isSuccess, data, error } = usePostNewBucket();
+  const { mutate, isError, isLoading: txPending, isSuccess, data, error } = usePostNewBucket();
   const { setToastData } = useContext(ToastContext);
 
   const [activeStep, setActiveStep] = useState(0);
@@ -96,7 +96,7 @@ export default function NewBucket({}: Props) {
       constituents: selectedVaults
         .filter((vault) => vault.checked)
         .map((vault) => ({
-          vaultSymbol: 'cDAI',
+          vaultSymbol: `${vault.vaultSymbol} - ${vault.chainName}`,
           tokenSymbol: vault.symbol,
           tokenAddress: vault.underlyingAddress,
           vaultAddress: vault.pool,
@@ -225,6 +225,7 @@ export default function NewBucket({}: Props) {
       <StepPanel value={activeStep} index={2}>
         <FinaliseDetails
           bucketName={bucketName}
+          isLoading={txPending}
           selectedTokens={selectedTokens}
           selectedVaults={selectedVaults}
           handleBack={handleBack}

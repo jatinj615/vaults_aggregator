@@ -31,6 +31,7 @@ const createRowObject = (row) => {
   const rowObject: IObject = {};
   rowObject.name = row.name;
   rowObject.symbol = row.name;
+  rowObject.vaultSymbol = 'AAVE WETH';
   rowObject.totalLiquidity = row.totalLiquidity;
   rowObject.liquidityRate = row.liquidityRate;
   rowObject.chainName = row.chain_name;

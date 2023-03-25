@@ -31,10 +31,12 @@ import { SUPPORTED_NETWORK } from 'constants/networkNames';
 import { getCurrencyPath } from 'constants/currencyPaths';
 import { ToastContext } from 'context/toastContext';
 import WalletIcon from 'icons/WalletIcon';
+import IObject from 'interfaces/iobject.interface';
+import useERC20 from 'hooks/useERC20';
 
 interface IInvestModalProps {
   showDialog: boolean;
-  setShowDialog: Function;
+  setShowDialog: (showDialog: boolean) => void;
   underlyingTokenSymbol: string;
   otSymbol: string;
   ytSymbol: string;
@@ -45,6 +47,7 @@ interface IInvestModalProps {
   streamKey: string;
   underlying: string;
   underlyingDecimals: number;
+  constituents: IObject[];
 }
 
 const BootstrapDialogTitle = (props: any) => {
@@ -84,11 +87,12 @@ export default function InvestModal({
   otAddress,
   ytAddress,
   streamKey,
-  underlying,
-  underlyingDecimals
+  underlying = 'atoken.id from aavedata api',
+  underlyingDecimals,
+  constituents
 }: IInvestModalProps) {
-  // const erc20 = useERC20();
-  // const underlyingToken = useMemo(() => erc20(underlying), [erc20, underlying]);
+  const erc20 = useERC20();
+  const underlyingToken = useMemo(() => erc20(underlying), [erc20, underlying]);
   const { network } = useStoreState((state) => state);
   // const { mint, getOTYTCount, redeemPrinciple, redeemYield } = useUnrealCore(streamKey);
   const { setShowConnectWalletModal } = useContext(ToastContext);
@@ -336,17 +340,20 @@ export default function InvestModal({
             </Grid>
           </Grid>
         </Grid>
-        <MaxInput
-          id="deposit-amount"
-          value={amount}
-          disabled={!(active && network === SUPPORTED_NETWORK) || loading}
-          error={amountError}
-          errorMessage={`Not enough ${underlyingSymbol} or invalid amount`}
-          placeholder="Enter amount"
-          handleInput={handleInput}
-          handleClickMaxBtn={handleClickMaxBtn}
-          customStyles={{ bgcolor: theme.palette.background.default }}
-        />
+        {constituents.map((constituent, index) => (
+          <MaxInput
+            key={index}
+            id={`constituent-amount-${index}`}
+            value={amount}
+            disabled={!(active && network === SUPPORTED_NETWORK) || loading}
+            error={amountError}
+            errorMessage={`Not enough ${underlyingSymbol} or invalid amount`}
+            placeholder="Enter amount"
+            handleInput={handleInput}
+            handleClickMaxBtn={handleClickMaxBtn}
+            customStyles={{ bgcolor: theme.palette.background.default }}
+          />
+        ))}
         <ApprovalCard
           approvalPending={approvalPending}
           approvalMessage={approvalMessage}
@@ -354,37 +361,6 @@ export default function InvestModal({
           loading={isApproving}
           customStyles={approvalPending ? { mt: 4 } : {}}
         />
-        <Typography sx={{ mt: 4, mb: 2 }} variant="subtitle2" gutterBottom component="div">
-          {`Here's what you'll get`}
-        </Typography>
-        <Typography variant="h6" component="div">
-          {otytAmountLoading ? (
-            <Grid container item wrap="nowrap" columnGap={1}>
-              <SkeletonLoader width={85} /> {otSymbol}
-            </Grid>
-          ) : (
-            `${otAmount ? otAmount : '-'} ${otSymbol}`
-          )}
-        </Typography>
-        <Typography variant="caption" display="block" gutterBottom>
-          OWNERSHIP TOKENS
-        </Typography>
-        <Typography variant="h6" component="div">
-          {otytAmountLoading ? (
-            <Grid container item wrap="nowrap" columnGap={1}>
-              <SkeletonLoader width={85} /> {ytSymbol}
-            </Grid>
-          ) : (
-            `${ytAmount ? ytAmount : '-'} ${ytSymbol}`
-          )}
-        </Typography>
-        <Typography variant="caption" display="block" gutterBottom>
-          YIELD TOKENS
-        </Typography>
-        {/* <Typography sx={{ mt: 4 }} variant="caption" display="block" gutterBottom>
-            You can use the principal and yield tokens to achieve lorem ipsum dolor sit amet and I’m typing some more
-            text here to fill some empty space. That is it, no more text now. Learn More
-          </Typography> */}
       </DialogContent>
       <DialogActions
         sx={{

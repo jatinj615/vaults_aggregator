@@ -178,7 +178,7 @@ export const showNewBucketError = (setToastData: ToastContextInterface['setToast
         // keep all other key-value pairs
         ...(prevContext || {}),
         [id]: {
-          title: 'An error occured',
+          title: 'An error occurred',
           severity: 'error'
         }
       } as ToastDataInterface;

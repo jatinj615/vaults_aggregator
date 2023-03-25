@@ -1,19 +1,5 @@
 import { useContext } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  Checkbox,
-  Chip,
-  Divider,
-  Grid,
-  InputLabel,
-  Stack,
-  Typography,
-  useTheme
-} from '@mui/material';
+import { Box, Button, Chip, Grid, InputLabel, Stack, Typography, useTheme } from '@mui/material';
 import { Web3Provider } from '@ethersproject/providers';
 import { useWeb3React } from '@web3-react/core';
 import { ToastContext } from 'context/toastContext';
@@ -22,9 +8,11 @@ import SaveIcon from '@mui/icons-material/Save';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import IObject from 'interfaces/iobject.interface';
 import { filter, map } from 'lodash-es';
+import Loader from '../Common/Loader';
 
 type Props = {
   bucketName: string;
+  isLoading: boolean;
   selectedTokens: string[];
   selectedVaults: IObject[];
   handleBack: () => void;
@@ -33,6 +21,7 @@ type Props = {
 
 export default function FinaliseDetails({
   bucketName,
+  isLoading,
   selectedTokens,
   selectedVaults,
   handleBack,
@@ -44,6 +33,17 @@ export default function FinaliseDetails({
 
   const handleConnect = () => {
     setShowConnectWalletModal(true);
+  };
+
+  const getSubmitBtnText = () => {
+    if (!active) {
+      return 'Connect wallet to submit';
+    }
+    if (isLoading) {
+      return <Loader size={3} color="inherit" />;
+    } else {
+      return 'Submit';
+    }
   };
 
   return (
@@ -99,15 +99,16 @@ export default function FinaliseDetails({
         <Box sx={{ flex: '1 1 auto' }} />
         <Button
           variant="contained"
+          disabled={isLoading}
           color={active ? 'success' : 'error'}
           onClick={active ? handleSubmit : handleConnect}
           sx={{
             padding: theme.typography.pxToRem(12)
           }}
           startIcon={!active ? <WalletIcon /> : null}
-          endIcon={active ? <SaveIcon /> : null}
+          endIcon={active && !isLoading ? <SaveIcon /> : null}
         >
-          {!active ? 'Connect wallet to submit' : 'Submit'}
+          {getSubmitBtnText()}
         </Button>
       </Box>
     </Grid>

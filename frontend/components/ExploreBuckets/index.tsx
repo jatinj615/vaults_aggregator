@@ -12,6 +12,7 @@ import { useRouter } from 'next/router';
 import { useWeb3React } from '@web3-react/core';
 import { Web3Provider } from '@ethersproject/providers';
 import InvestModal from '../Modal/InvestModal';
+import IObject from 'interfaces/iobject.interface';
 
 type Props = {};
 
@@ -22,18 +23,46 @@ export default function ExploreBuckets({}: Props) {
   const { data: exploreBucketsData = [], isLoading, isFetching } = useGetExploreBuckets(account);
   const loading = isFetching || isLoading;
   const [showInvestModal, setShowInvestModal] = useState(false);
+  const [constituents, setConstituents] = useState<IObject[]>([]);
 
   const handleClickNewBucketBtn = () => {
     router.push('/new-bucket');
   };
 
-  const handlShowInvestModal = (value: boolean) => {
+  const handleShowInvestModal = (value: boolean) => {
     setShowInvestModal(value);
+  };
+
+  const resetInvestModal = () => {
+    setConstituents([]);
+  };
+
+  const handleCardClick = (bucket: IObject) => {
+    resetInvestModal();
+    setConstituents(bucket.constituents);
+    setShowInvestModal(true);
   };
 
   return (
     <>
       <Title titleText="Explore Buckets | Vault Aggregator" />
+      {showInvestModal && (
+        <InvestModal
+          showDialog={showInvestModal}
+          setShowDialog={handleShowInvestModal}
+          underlyingTokenSymbol={'WETH'}
+          otSymbol={'otSymbol'}
+          ytSymbol={'ytSymbol'}
+          durationSeconds={0}
+          protocol={'protocol'}
+          otAddress={'otAddress'}
+          ytAddress={'ytAddress'}
+          streamKey={'streamKey'}
+          underlying={'underlying'}
+          underlyingDecimals={18}
+          constituents={constituents}
+        />
+      )}
       {loading ? (
         <Card sx={{ cursor: 'wait', width: '100%', maxWidth: 350, mt: 6 }}>
           <CardHeader
@@ -57,7 +86,7 @@ export default function ExploreBuckets({}: Props) {
           {exploreBucketsData.map((bucket, index) => (
             <Grid key={index} xs={12} sm={6} md={4} lg={3} item>
               <Card sx={{ cursor: 'pointer', width: '100%', maxWidth: 450 }}>
-                <CardActionArea disableRipple onClick={() => setShowInvestModal(true)}>
+                <CardActionArea disableRipple onClick={() => handleCardClick(bucket)}>
                   <CardHeader
                     subheader={bucket.name || `Bucket ${index + 1}`}
                     subheaderTypographyProps={{ sx: { fontWeight: theme.typography.fontWeightBold } }}
@@ -96,22 +125,6 @@ export default function ExploreBuckets({}: Props) {
         </Grid>
       ) : (
         <CustomNoRowsOverlay noRowsMessage="You do not have any buckets! Create one using the + icon" />
-      )}
-      {showInvestModal && (
-        <InvestModal
-          showDialog={showInvestModal}
-          setShowDialog={handlShowInvestModal}
-          underlyingTokenSymbol={'underlyingTokenSymbol'}
-          otSymbol={'otSymbol'}
-          ytSymbol={'ytSymbol'}
-          durationSeconds={0}
-          protocol={'protocol'}
-          otAddress={'otAddress'}
-          ytAddress={'ytAddress'}
-          streamKey={'streamKey'}
-          underlying={'underlying'}
-          underlyingDecimals={18}
-        />
       )}
       <Tooltip title="Create a custom bucket" placement="top">
         <Fab
