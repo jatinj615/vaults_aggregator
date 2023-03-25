@@ -371,7 +371,7 @@ export interface Registry extends BaseContract {
     ): Promise<ContractTransaction>;
 
     xReceive(
-      _transferId: PromiseOrValue<BytesLike>,
+      arg0: PromiseOrValue<BytesLike>,
       _amount: PromiseOrValue<BigNumberish>,
       _asset: PromiseOrValue<string>,
       _originSender: PromiseOrValue<string>,
@@ -443,7 +443,7 @@ export interface Registry extends BaseContract {
   ): Promise<ContractTransaction>;
 
   xReceive(
-    _transferId: PromiseOrValue<BytesLike>,
+    arg0: PromiseOrValue<BytesLike>,
     _amount: PromiseOrValue<BigNumberish>,
     _asset: PromiseOrValue<string>,
     _originSender: PromiseOrValue<string>,
@@ -505,7 +505,7 @@ export interface Registry extends BaseContract {
     userDepositRequest(
       _depositRequest: Registry.VaultRequestStruct[],
       overrides?: CallOverrides
-    ): Promise<string>;
+    ): Promise<string[]>;
 
     userWithdrawRequest(
       _withdrawRequest: Registry.VaultRequestStruct,
@@ -513,7 +513,7 @@ export interface Registry extends BaseContract {
     ): Promise<BigNumber>;
 
     xReceive(
-      _transferId: PromiseOrValue<BytesLike>,
+      arg0: PromiseOrValue<BytesLike>,
       _amount: PromiseOrValue<BigNumberish>,
       _asset: PromiseOrValue<string>,
       _originSender: PromiseOrValue<string>,
@@ -617,7 +617,7 @@ export interface Registry extends BaseContract {
     ): Promise<BigNumber>;
 
     xReceive(
-      _transferId: PromiseOrValue<BytesLike>,
+      arg0: PromiseOrValue<BytesLike>,
       _amount: PromiseOrValue<BigNumberish>,
       _asset: PromiseOrValue<string>,
       _originSender: PromiseOrValue<string>,
@@ -690,7 +690,7 @@ export interface Registry extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     xReceive(
-      _transferId: PromiseOrValue<BytesLike>,
+      arg0: PromiseOrValue<BytesLike>,
       _amount: PromiseOrValue<BigNumberish>,
       _asset: PromiseOrValue<string>,
       _originSender: PromiseOrValue<string>,

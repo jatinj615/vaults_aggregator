@@ -21,16 +21,16 @@ export const connextDomain: { [key: number]: number} = {
 
 export const registryRoutes: { [key: number]: { [key: number] : string}} = {
     5: {
-        0: "0x47430eF88B40Aab347B5683b7E6749657Abf51EC"
+        0: "0x5a0ec6A7bfc10cFD36D7f7847e917e3Fc6a815A1"
     },
     420: {
-        0: "0x34E5A36461aa3DC17Cb9CefEDbC9Ad23345c9dA5"
+        0: "0x5D5d2B8d4E1DF2DAce70435E6b7e54269D48a6C7"
     },
     80001: {
-        0: "0x620cfB01a20bea400E155E41Dc53CaffA97E3a6a"
+        0: "0x5276beec3470C595337f4E4CA70b088e484580AA"
     },
     421613: {
-        0: "0xBBe2F62f461Ee05A6Dcf7D24F938dd97e7A197a5"
+        0: "0x5D5d2B8d4E1DF2DAce70435E6b7e54269D48a6C7"
     }
 }
 
