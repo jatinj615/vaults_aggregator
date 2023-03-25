@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
-import { debounce } from 'lodash-es';
+import { every, reduce, some } from 'lodash-es';
 
 import {
   Avatar,
@@ -23,17 +23,26 @@ import SkeletonLoader from 'components/Common/SkeletonLoader';
 
 import { useStoreState } from 'store/globalStore';
 import { formatNumber, intlFormatNumber, isIncorrectNumberFormat } from 'utils';
-import { constantStrings } from 'utils/constants';
 import { bnum, ZERO } from 'utils/poolCalc/utils/bignumber';
 import { useWeb3React } from '@web3-react/core';
 import { Web3Provider } from '@ethersproject/providers';
-import { SUPPORTED_NETWORK, SUPPORTED_NETWORKS } from 'constants/networkNames';
+import { SUPPORTED_NETWORKS } from 'constants/networkNames';
 import { getCurrencyPath } from 'constants/currencyPaths';
 import { ToastContext } from 'context/toastContext';
 import WalletIcon from 'icons/WalletIcon';
 import IObject from 'interfaces/iobject.interface';
 import useERC20 from 'hooks/useERC20';
 import { NetworkName } from 'enums';
+
+interface IAmountError {
+  [key: string]: boolean;
+}
+
+const anyAmountError = (amountErrors: IAmountError | undefined) =>
+  amountErrors ? some(amountErrors, (value, key) => value) : false;
+
+const allAmountsBlank = (amounts: IObject | undefined) =>
+  amounts ? every(amounts, (value, key) => value === '' || parseFloat(value) === 0) : true;
 
 interface IInvestModalProps {
   showDialog: boolean;
@@ -100,19 +109,15 @@ export default function InvestModal({
     library
   } = useWeb3React<Web3Provider>();
 
-  const [otAmount, setotAmount] = useState<string>('');
-  const [amountError, setAmountError] = useState<boolean>(false);
-  const [ytAmount, setytAmount] = useState<string>('');
+  const [amountErrors, setAmountErrors] = useState<IAmountError>();
   const [txPending, setTxPending] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const [otytAmountLoading, setotytAmountLoading] = useState<boolean>(false);
   const [approvalPending, setApprovalPending] = useState<boolean>(false);
   const [isApproving, setIsApproving] = useState<boolean>(false);
   const [approvedLimit, setApprovedLimit] = useState<ethers.BigNumber>(ethers.constants.MaxUint256);
   const [balance, setBalance] = useState<ethers.BigNumber>(ethers.BigNumber.from('0'));
   const [underlyingSymbol, setUnderlyingSymbol] = useState<string>(underlyingTokenSymbol ? underlyingTokenSymbol : '-');
-  const [amount, setAmount] = useState<string>('0');
-  const [amountPercentage, setAmountPercentage] = useState<number>(0);
+  const [amounts, setAmounts] = useState<IObject>();
   const theme = useTheme();
 
   const hideDialog = () => {
@@ -132,85 +137,64 @@ export default function InvestModal({
     setTxPending(true);
 
     try {
-      const amountToSubscribe = ethers.utils.parseUnits(amount, underlyingDecimals);
+      // const amountToSubscribe = ethers.utils.parseUnits(amount, underlyingDecimals);
 
-      if (approvedLimit.gte(amountToSubscribe)) {
-        // await mint(amountToSubscribe, otAddress, ytAddress, protocol, underlying, durationSeconds, otSymbol, ytSymbol);
+      // if (approvedLimit.gte(amountToSubscribe)) {
+      // await mint(amountToSubscribe, otAddress, ytAddress, protocol, underlying, durationSeconds, otSymbol, ytSymbol);
 
-        setAmount('');
-        setAmountPercentage(0);
-        setotAmount('');
-        setytAmount('');
-        const balance = await underlyingToken.getBalance();
-        setBalance(balance);
-        // const limit = await underlyingToken.getAllowance(core.address);
-        // setApprovedLimit(limit);
-        setShowDialog(false);
-      } else {
-        setApprovalPending(true);
-      }
+      setAmounts(undefined);
+      const balance = await underlyingToken.getBalance();
+      setBalance(balance);
+      // const limit = await underlyingToken.getAllowance(core.address);
+      // setApprovedLimit(limit);
+      setShowDialog(false);
+      // } else {
+      setApprovalPending(true);
+      // }
     } finally {
       setTxPending(false);
     }
   };
 
-  const getOTYTCountDebounced = useRef(
-    debounce(async (fn: Function, input: ethers.BigNumber) => {
-      const { ot, yt } = await fn(input);
-      setotAmount(intlFormatNumber(bnum(ethers.utils.formatEther(ot)).dp(6, 1).toString(), 6));
-      setytAmount(intlFormatNumber(bnum(ethers.utils.formatEther(yt)).dp(6, 1).toString(), 6));
-      setotytAmountLoading(false);
-    }, 500)
-  ).current;
-
-  const handleInput = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.value) {
-      const balanceFormatted = bnum(ethers.utils.formatUnits(balance, underlyingDecimals));
-      const newValue = balanceFormatted.gt(ZERO)
-        ? bnum(e.target.value).multipliedBy(100).div(balanceFormatted).toNumber()
-        : 0;
-      setAmount(e.target.value);
-      setAmountPercentage(newValue);
-      setotytAmountLoading(true);
+      setAmounts((prevAmounts) => ({
+        ...prevAmounts,
+        [e.target.name]: e.target.value
+      }));
       if (isIncorrectNumberFormat(e.target.value)) {
-        setAmountError(true);
-        getOTYTCountDebounced.cancel();
-        setotytAmountLoading(false);
+        setAmountErrors((prevAmountErrors) => ({
+          ...prevAmountErrors,
+          [e.target.name]: true
+        }));
       } else {
         const newB = parseFloat(ethers.utils.formatUnits(balance, underlyingDecimals));
-        const newI = parseFloat(e.target.value);
-        if (newI > newB) {
-          setAmountError(true);
-          getOTYTCountDebounced.cancel();
-          setotAmount('');
-          setytAmount('');
-          setotytAmountLoading(false);
+        let amountSum = amounts
+          ? reduce(
+              amounts,
+              (sum, value, key) => sum + (key === e.target.name ? parseFloat(e.target.value) : parseFloat(value)),
+              0
+            )
+          : parseFloat(e.target.value);
+        if (amountSum > newB) {
+          setAmountErrors((prevAmountErrors) => ({
+            ...prevAmountErrors,
+            [e.target.name]: true
+          }));
         } else {
-          setAmountError(false);
-          getOTYTCountDebounced.cancel();
-          // await getOTYTCountDebounced(getOTYTCount, ethers.utils.parseEther(e.target.value));
+          setAmountErrors(undefined);
         }
       }
     } else {
-      setAmount('');
-      setAmountPercentage(0);
-      setAmountError(false);
-      getOTYTCountDebounced.cancel();
-      setotAmount('');
-      setytAmount('');
-      setotytAmountLoading(false);
+      setAmounts((prevAmounts) => ({
+        ...prevAmounts,
+        [e.target.name]: e.target.value
+      }));
+      setAmountErrors((prevAmountErrors) => ({
+        ...prevAmountErrors,
+        [e.target.name]: false
+      }));
     }
-  };
-
-  const handleClickMaxBtn = async () => {
-    const balanceFormatted = bnum(ethers.utils.formatUnits(balance, underlyingDecimals));
-    const maxAmount = formatNumber(balanceFormatted.dp(6, 1).toString(), 6);
-    setAmount(maxAmount);
-    setAmountPercentage(balanceFormatted.gt(ZERO) ? 100 : 0);
-    setAmountError(false);
-    setotytAmountLoading(true);
-    getOTYTCountDebounced.cancel();
-    // await getOTYTCountDebounced(getOTYTCount, ethers.utils.parseEther(maxAmount));
   };
 
   const handleApprove = async () => {
@@ -234,13 +218,6 @@ export default function InvestModal({
       setIsApproving(false);
     }
   };
-
-  useEffect(() => {
-    // Clean the state when the component is unmounted
-    return () => {
-      getOTYTCountDebounced.cancel();
-    };
-  }, [getOTYTCountDebounced]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -290,7 +267,7 @@ export default function InvestModal({
     if (txPending) {
       return <Loader size={3} color="inherit" />;
     }
-    if (amountError) {
+    if (anyAmountError(amountErrors)) {
       return 'Insufficient Balance';
     } else {
       return `Deposit ${underlyingSymbol}`;
@@ -300,12 +277,11 @@ export default function InvestModal({
   const isSubmitBtnDisabled = () => {
     if (active) {
       return (
-        amountError ||
-        amount === '' ||
-        parseFloat(amount) === 0 ||
+        anyAmountError(amountErrors) ||
+        allAmountsBlank(amounts) ||
         approvalPending ||
         txPending ||
-        network !== SUPPORTED_NETWORK
+        !SUPPORTED_NETWORKS.includes(network as NetworkName)
       );
     }
   };
@@ -353,24 +329,27 @@ export default function InvestModal({
           </Grid>
         </Grid>
         <Grid item container direction="column" rowSpacing={2}>
-          {constituents.map((constituent, index) => (
-            <Grid item key={index}>
-              <MaxInput
-                id={`constituent-amount-${index}`}
-                primaryText={
-                  loading ? <SkeletonLoader width="100px" /> : `${constituent.tokenSymbol} - ${constituent.network}`
-                }
-                value={amount}
-                step={0.01}
-                disabled={!(active && network === SUPPORTED_NETWORK) || loading}
-                error={amountError}
-                errorMessage={`Not enough ${underlyingSymbol} or invalid amount`}
-                placeholder="Enter amount"
-                handleInput={(e: React.ChangeEvent<HTMLInputElement>) => handleInput(e, index)}
-                handleClickMaxBtn={handleClickMaxBtn}
-              />
-            </Grid>
-          ))}
+          {constituents.map((constituent, index) => {
+            const name = `${constituent.network}-amount`;
+            return (
+              <Grid item key={index}>
+                <MaxInput
+                  id={`constituent-amount-${index}`}
+                  name={name}
+                  primaryText={
+                    loading ? <SkeletonLoader width="100px" /> : `${constituent.tokenSymbol} - ${constituent.network}`
+                  }
+                  value={amounts?.[name] || '0'}
+                  step={0.01}
+                  disabled={!(active && SUPPORTED_NETWORKS.includes(network as NetworkName)) || loading}
+                  error={amountErrors?.[name]}
+                  errorMessage={`Not enough ${underlyingSymbol} or invalid amount`}
+                  placeholder="Enter amount"
+                  handleInput={handleInput}
+                />
+              </Grid>
+            );
+          })}
         </Grid>
         <ApprovalCard
           approvalPending={approvalPending}

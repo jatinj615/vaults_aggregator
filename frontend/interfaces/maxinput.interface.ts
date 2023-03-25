@@ -1,5 +1,6 @@
 export default interface MaxInputInterface {
   id: string;
+  name?: string;
   primaryText?: string | JSX.Element;
   secondaryText?: string | JSX.Element;
   disabled?: boolean;

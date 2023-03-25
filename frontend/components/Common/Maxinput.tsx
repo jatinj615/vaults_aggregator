@@ -41,6 +41,7 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
 
 const MaxInput = ({
   id,
+  name,
   primaryText,
   secondaryText,
   disabled = false,
@@ -120,6 +121,7 @@ const MaxInput = ({
             <Stack direction="row" alignItems="center">
               <StyledTextField
                 id={`select-input-${id}`}
+                name={name}
                 type="number"
                 placeholder={placeholder}
                 disabled={disabled}
