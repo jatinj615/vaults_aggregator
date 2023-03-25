@@ -31,7 +31,7 @@ export default function NoMatchFound() {
         )}
       </Grid>
       <Grid item>
-        <Typography variant="subtitle1">Please connect your wallet to view your buckets</Typography>
+        <Typography variant="subtitle1">Please connect your wallet to view your portfolio</Typography>
       </Grid>
       <Grid item width={theme.typography.pxToRem(350)}>
         <Button
@@ -43,7 +43,7 @@ export default function NoMatchFound() {
           }}
           onClick={handleClickRedirect}
         >
-          View existing buckets
+          View explore buckets
         </Button>
       </Grid>
     </Grid>

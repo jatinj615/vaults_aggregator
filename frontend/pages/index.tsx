@@ -1,11 +1,11 @@
-import ExistingBuckets from 'components/ExistingBuckets';
+import ExploreBuckets from 'components/ExploreBuckets';
 import CommonLayout from 'layouts/CommonLayout';
 
 export default function Home() {
   return (
     // main page content
     <>
-      <ExistingBuckets />
+      <ExploreBuckets />
       {/* common layout contains components which are universally shared in the entire UI */}
       <CommonLayout />
     </>

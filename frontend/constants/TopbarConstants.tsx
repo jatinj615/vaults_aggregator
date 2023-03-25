@@ -10,17 +10,17 @@ import PortfolioIcon from 'icons/PortfolioIcon';
 export const TopbarItems: TopbarInterface[] = [
   {
     link: '/',
-    text: 'EXISTING BUCKETS',
+    text: 'EXPLORE BUCKETS',
     icon: () => <FixedRatesIcon />,
-    title: 'Existing Buckets',
-    subtitle: 'Edit or use existing buckets here'
+    title: 'Explore Buckets',
+    subtitle: 'Invest in existing buckets or create a custom bucket'
   },
   {
-    link: '/my-buckets',
-    text: 'MY BUCKETS',
+    link: '/my-portfolio',
+    text: 'MY PORTFOLIO',
     icon: () => <DepositIcon />,
-    title: 'My Buckets',
-    subtitle: 'View your existing buckets or create a new bucket',
+    title: 'My Portfolio',
+    subtitle: 'View your investments',
     patterns: [/new-bucket/]
   }
 ];
