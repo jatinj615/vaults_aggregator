@@ -83,9 +83,10 @@ contract Registry is IXReceiver, Ownable {
         VaultRequest[] calldata _depositRequest
     )   external
         payable
-        returns (bytes32)
+        returns (bytes32[] memory)
     {   
-        for(uint256 i = 0; i < _depositRequest.length; i++) {
+        bytes32[] memory transferIds = new bytes32[](_depositRequest.length);
+        for(uint i=0; i<_depositRequest.length; i++) {
             _checkUserRequest(
                 _depositRequest[i].amount, 
                 _depositRequest[i].onBehalfOf, 
@@ -122,9 +123,8 @@ contract Registry is IXReceiver, Ownable {
                     _depositRequest[i].bridgeRequest.slippage, 
                     _payload
                 );
-
+                transferIds[i] = transferId;
                 emit Bridged(msg.sender, transferId);
-                return transferId;
             } 
             // if bridge is not required, deposit in the vault
             else {
@@ -142,9 +142,10 @@ contract Registry is IXReceiver, Ownable {
                     _depositRequest[i].underlying, 
                     _depositRequest[i].vaultAddress
                 );
-                return 0x00;
+                transferIds[i] = 0x00;
             }
         }
+        return transferIds;
     }
 
     function userBorrowRequest(
@@ -247,7 +248,7 @@ contract Registry is IXReceiver, Ownable {
 
     
     function xReceive(
-        bytes32 _transferId,
+        bytes32 ,
         uint256 _amount,
         address _asset,
         address _originSender,
@@ -290,7 +291,6 @@ contract Registry is IXReceiver, Ownable {
 
             // TODO: send borrowed asset back to source chain
         }
-
     }
 
     /**
