@@ -128,7 +128,7 @@ const useRegistry = () => {
       if (!flagIsSameChainTx) {
         tx = await registryContract
           .connect(signer)
-          .userDepositRequest(payload, { value: relayerFee, gasLimit: 250000 });
+          .userDepositRequest(payload, { value: relayerFee});
       } else {
         console.log('same chain tx');
         tx = await registryContract.connect(signer).userDepositRequest(payload);
