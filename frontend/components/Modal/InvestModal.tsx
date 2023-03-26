@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
-import { every, reduce, some } from 'lodash-es';
+import { every, forEach, map, reduce, some } from 'lodash-es';
 
 import {
   Avatar,
@@ -32,7 +32,11 @@ import { ToastContext } from 'context/toastContext';
 import WalletIcon from 'icons/WalletIcon';
 import IObject from 'interfaces/iobject.interface';
 import useERC20 from 'hooks/useERC20';
-import { NetworkName } from 'enums';
+import { ChainId, NetworkName } from 'enums';
+import { ContractAddressFromChainId } from 'utils/contracts';
+import { constantStrings } from 'utils/constants';
+import axios from 'axios';
+import useRegistry from 'hooks/useRegistry';
 
 interface IAmountError {
   [key: string]: boolean;
@@ -48,11 +52,7 @@ interface IInvestModalProps {
   showDialog: boolean;
   setShowDialog: (showDialog: boolean) => void;
   underlyingTokenSymbol: string;
-  durationSeconds: number;
-  protocol: string;
-  otAddress: string;
-  ytAddress: string;
-  streamKey: string;
+  chainId: number;
   underlying: string;
   underlyingDecimals: number;
   constituents: IObject[];
@@ -88,19 +88,16 @@ export default function InvestModal({
   showDialog,
   setShowDialog,
   underlyingTokenSymbol,
-  durationSeconds,
-  protocol,
-  otAddress,
-  ytAddress,
-  streamKey,
+  chainId,
   underlying,
   underlyingDecimals,
   constituents
 }: IInvestModalProps) {
   const erc20 = useERC20();
-  const underlyingToken = useMemo(() => erc20(underlying), [erc20, underlying]);
+  const underlyingToken = useMemo(() => {
+    if (underlying) return erc20(underlying);
+  }, [erc20, underlying]);
   const { network } = useStoreState((state) => state);
-  // const { mint, getOTYTCount, redeemPrinciple, redeemYield } = useUnrealCore(streamKey);
   const { setShowConnectWalletModal } = useContext(ToastContext);
   const {
     activate: activateActiveConnector,
@@ -108,6 +105,7 @@ export default function InvestModal({
     active,
     library
   } = useWeb3React<Web3Provider>();
+  const { userDepositRequest } = useRegistry();
 
   const [amountErrors, setAmountErrors] = useState<IAmountError>();
   const [txPending, setTxPending] = useState<boolean>(false);
@@ -125,7 +123,7 @@ export default function InvestModal({
   };
 
   const approvalMessage = useMemo(
-    () => `You need to grant Unreal approval to spend your ${underlyingSymbol} in order to perform this transaction.`,
+    () => `You need to grant xVaults approval to spend your ${underlyingSymbol} in order to perform this transaction.`,
     [underlyingSymbol]
   );
 
@@ -137,20 +135,32 @@ export default function InvestModal({
     setTxPending(true);
 
     try {
-      // const amountToSubscribe = ethers.utils.parseUnits(amount, underlyingDecimals);
+      const amountsSum = reduce(amounts, (sum, value, key) => sum + parseFloat(value), 0);
+      const amountToSubscribe = ethers.utils.parseUnits(amountsSum.toString(), underlyingDecimals);
 
-      // if (approvedLimit.gte(amountToSubscribe)) {
-      // await mint(amountToSubscribe, otAddress, ytAddress, protocol, underlying, durationSeconds, otSymbol, ytSymbol);
+      if (approvedLimit.gte(amountToSubscribe)) {
+        const amountsAsBigNumber = {};
+        const vaultAddresses = {};
+        forEach(amounts, (value, key) => {
+          const chainId = key.split('-')[0];
+          const vaultAddress = key.split('-')[1];
+          amountsAsBigNumber[key] = ethers.utils.parseEther(value);
+          vaultAddresses[chainId] = vaultAddress;
+        });
 
-      setAmounts(undefined);
-      const balance = await underlyingToken.getBalance();
-      setBalance(balance);
-      // const limit = await underlyingToken.getAllowance(core.address);
-      // setApprovedLimit(limit);
-      setShowDialog(false);
-      // } else {
-      setApprovalPending(true);
-      // }
+        await userDepositRequest(underlying, amountsAsBigNumber, vaultAddresses, ethers.BigNumber.from('0'), chainId);
+
+        setAmounts(undefined);
+        const balance = await underlyingToken.getBalance();
+        setBalance(balance);
+
+        const contractAddress = ContractAddressFromChainId[chainId];
+        const limit = await underlyingToken.getAllowance(contractAddress);
+        setApprovedLimit(limit);
+        setShowDialog(false);
+      } else {
+        setApprovalPending(true);
+      }
     } finally {
       setTxPending(false);
     }
@@ -201,16 +211,17 @@ export default function InvestModal({
     setIsApproving(true);
 
     try {
-      // const tx = await underlyingToken.approve(ethers.constants.MaxUint256, core.address);
+      const contractAddress = ContractAddressFromChainId[chainId];
+      const tx = await underlyingToken.approve(ethers.constants.MaxUint256, contractAddress);
 
-      // await toast.promise(tx.wait(), {
-      //   loading: constantStrings.approvalPending,
-      //   success: constantStrings.approvalCompleted,
-      //   error: constantStrings.approvalFailed
-      // });
+      await toast.promise(tx.wait(), {
+        loading: constantStrings.approvalPending,
+        success: constantStrings.approvalCompleted,
+        error: constantStrings.approvalFailed
+      });
 
-      // const limit = await underlyingToken.getAllowance(core.address);
-      // setApprovedLimit(limit);
+      const limit = await underlyingToken.getAllowance(contractAddress);
+      setApprovedLimit(limit);
       setApprovalPending(false);
     } catch (error) {
       console.error('Error from deposit card approval', error);
@@ -221,7 +232,7 @@ export default function InvestModal({
 
   useEffect(() => {
     const fetch = async () => {
-      if (underlyingToken?.approve && loading) {
+      if (underlyingToken?.approve && loading && chainId) {
         try {
           const symbol = await underlyingToken.symbol();
           setUnderlyingSymbol(symbol);
@@ -229,8 +240,9 @@ export default function InvestModal({
           const balance = await underlyingToken.getBalance();
           setBalance(balance);
 
-          // const limit = await underlyingToken.getAllowance(core.address);
-          // setApprovedLimit(limit);
+          const contractAddress = ContractAddressFromChainId[chainId];
+          const limit = await underlyingToken.getAllowance(contractAddress);
+          setApprovedLimit(limit);
         } catch (error) {
           console.error('Error from deposit card modal ERC20 API', error);
         } finally {
@@ -240,7 +252,7 @@ export default function InvestModal({
     };
 
     fetch();
-  }, [underlyingToken, loading]);
+  }, [underlyingToken, loading, chainId]);
 
   const getAvailableBalance = () => {
     if (!active) {
@@ -330,7 +342,7 @@ export default function InvestModal({
         </Grid>
         <Grid item container direction="column" rowSpacing={2}>
           {constituents.map((constituent, index) => {
-            const name = `${constituent.network}-amount`;
+            const name = `${constituent.chainID}-${constituent.vaultAddress}-amount`;
             return (
               <Grid item key={index}>
                 <MaxInput

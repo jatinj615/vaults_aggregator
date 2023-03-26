@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CardActionArea, CardContent, CardHeader, Chip, Divider, Fab, Grid, Tooltip, useTheme } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 
@@ -6,7 +6,8 @@ import Title from 'components/Common/Title';
 import { Card } from 'components/Common/Card';
 import LabelValue from 'components/Common/LabelValue';
 import SkeletonLoader from 'components/Common/SkeletonLoader';
-import { useGetExploreBuckets } from '@/hooks/api/getExploreBuckets';
+import { useSigner } from 'hooks/ethereum';
+import { useGetExploreBuckets } from 'hooks/api/getExploreBuckets';
 import CustomNoRowsOverlay from '../Common/CustomNoRowsOverlay';
 import { useRouter } from 'next/router';
 import { useWeb3React } from '@web3-react/core';
@@ -14,7 +15,7 @@ import { Web3Provider } from '@ethersproject/providers';
 import InvestModal from '../Modal/InvestModal';
 import IObject from 'interfaces/iobject.interface';
 import { useStoreState } from 'store/globalStore';
-import { ChainNameFromWethAddress } from 'constants/networkNames';
+import { WethAddressFromChainName } from 'constants/networkNames';
 
 type Props = {};
 
@@ -22,12 +23,40 @@ export default function ExploreBuckets({}: Props) {
   const { network } = useStoreState((state) => state);
   const theme = useTheme();
   const router = useRouter();
-  const { account } = useWeb3React<Web3Provider>();
+  const { account, library } = useWeb3React<Web3Provider>();
+  const signer = useSigner(account, library);
   const { data: exploreBucketsData = [], isLoading, isFetching } = useGetExploreBuckets(account);
   const loading = isFetching || isLoading;
   const [showInvestModal, setShowInvestModal] = useState(false);
-  const [underlying, setUnderlying] = useState('');
   const [constituents, setConstituents] = useState<IObject[]>([]);
+  const [chainId, setChainId] = useState<number>();
+
+  const underlying = WethAddressFromChainName[network];
+
+  useEffect(() => {
+    let active = true;
+
+    const setChainID = async () => {
+      if (signer) {
+        try {
+          const connectedChainId = await signer.getChainId();
+          if (!active) {
+            return;
+          }
+          setChainId(connectedChainId);
+        } catch (error) {
+          console.error('Error from structure signer getChainId API', error);
+        }
+      }
+    };
+
+    setChainID();
+    // Clean the state when the component is unmounted
+    return () => {
+      active = false;
+      setChainId(undefined);
+    };
+  }, [signer]);
 
   const handleClickNewBucketBtn = () => {
     router.push('/new-bucket');
@@ -39,13 +68,11 @@ export default function ExploreBuckets({}: Props) {
 
   const resetInvestModal = () => {
     setConstituents([]);
-    setUnderlying('');
   };
 
   const handleCardClick = (bucket: IObject) => {
     resetInvestModal();
     setConstituents(bucket.constituents);
-    setUnderlying(ChainNameFromWethAddress[network]);
     setShowInvestModal(true);
   };
 
@@ -57,11 +84,7 @@ export default function ExploreBuckets({}: Props) {
           showDialog={showInvestModal}
           setShowDialog={handleShowInvestModal}
           underlyingTokenSymbol={'WETH'}
-          durationSeconds={0}
-          protocol={'protocol'}
-          otAddress={'otAddress'}
-          ytAddress={'ytAddress'}
-          streamKey={'streamKey'}
+          chainId={chainId}
           underlying={underlying}
           underlyingDecimals={18}
           constituents={constituents}

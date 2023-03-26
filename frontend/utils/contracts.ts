@@ -1,5 +1,5 @@
 import { SUPPORTED_NETWORK } from 'constants/networkNames';
-import { NetworkName } from 'enums';
+import { ChainId, NetworkName } from 'enums';
 
 export let contract;
 
@@ -51,3 +51,20 @@ if (NetworkName.MAINNET === SUPPORTED_NETWORK) {
     ]
   });
 }
+
+// for approval
+export const ContractAddressFromChainId: Record<ChainId, string> = {
+  [ChainId.MAINNET]: '',
+  [ChainId.GOERLI]: '0xF2217656B69a0f822d6dBD54B42641B44697dAb8',
+  [ChainId.OPTIMISM]: '0x46539763C1eA530f8CC88E81d911Efc48a1411f3',
+  [ChainId.MUMBAI]: '0x1BA989F00755F20936DDA2B781D38470529B9C53',
+  [ChainId.ARBITRUM]: '0x46539763C1eA530f8CC88E81d911Efc48a1411f3'
+};
+
+export const RouteIdFromChainId: Record<ChainId, number> = {
+  [ChainId.MAINNET]: 0,
+  [ChainId.GOERLI]: 1735353714,
+  [ChainId.OPTIMISM]: 1735356532,
+  [ChainId.MUMBAI]: 9991,
+  [ChainId.ARBITRUM]: 421613
+};

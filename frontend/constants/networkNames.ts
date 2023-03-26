@@ -4,11 +4,11 @@ import { ChainNames } from './chainIds';
 
 export const DEFAULT_NETWORK_NAMES: NetworkName[] = [NetworkName.MAINNET, NetworkName.GOERLI];
 
-export const ChainNameFromWethAddress: Record<string, string> = {
-  [NetworkName.OPTIMISM]: '0x09badef78f92f20fd5f7a402dbb1d25d4901aab2',
-  [NetworkName.GOERLI]: '0x2e3a2fb8473316a02b8a297b982498e661e1f6f5',
-  [NetworkName.ARBITRUM]: '0xcda739d69067333974cd73a722ab92e5e0ad8a4f',
-  [NetworkName.MUMBAI]: '0xd575d4047f8c667e064a4ad433d04e25187f40bb'
+export const WethAddressFromChainName: Record<string, string> = {
+  [NetworkName.OPTIMISM]: '0x74c6FD7D2Bc6a8F0Ebd7D78321A95471b8C2B806',
+  [NetworkName.GOERLI]: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
+  [NetworkName.ARBITRUM]: '0x1346786E6A5e07b90184a1Ba58E55444b99DC4A2',
+  [NetworkName.MUMBAI]: '0xFD2AB41e083c75085807c4A65C0A14FDD93d55A9'
 };
 
 export const NetworkNameFromAlchemyNetwork: Record<any, string> = {

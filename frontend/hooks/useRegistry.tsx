@@ -10,9 +10,12 @@ import toast from 'react-hot-toast';
 import { registries, connextDomain, ConnextWeth } from '../utils/multiChainConstants';
 import { Registry__factory } from './typechain';
 import { BigNumber } from 'ethers';
-import { isUndefined, toString } from 'lodash-es';
+import { filter, forEach, isUndefined, map, toString } from 'lodash-es';
 import { ExplorerDataType, getExplorerLink } from 'utils';
 import { getConnextData } from '../utils/getConnextData';
+import axios from 'axios';
+import IObject from 'interfaces/iobject.interface';
+import { RouteIdFromChainId } from 'utils/contracts';
 
 type BridgeRequestStruct = {
   destinationDomain: BigNumber;
@@ -46,49 +49,86 @@ const useRegistry = () => {
     }
   };
 
-  const userDepositRequest = async (
-    destinationChainId: number,
-    underlying: string,
-    amount: BigNumber,
-    vaultAddress: string,
-    routeId: BigNumber
-  ) => {
-    try {
-      let relayerFee: BigNumber = ethers.BigNumber.from('0');
-      let slippage: BigNumber = ethers.BigNumber.from('0');
-      // TODO: add relayer fee API
-      if (destinationChainId != chainId) {
-        const connextSDKResponse = await getConnextData(chainId, destinationChainId, amount.toString());
-        console.log(connextSDKResponse);
+  type AmountObject = {
+    [key: string]: BigNumber;
+  };
 
-        relayerFee = ethers.BigNumber.from(String(connextSDKResponse.relayerFee));
+  type VaultAddressObject = {
+    [key: string]: string;
+  };
+
+  const userDepositRequest = async (
+    underlying: string,
+    amounts: AmountObject,
+    vaultAddresses: VaultAddressObject,
+    routeId: BigNumber,
+    chainId: number
+  ) => {
+    let relayerFee: BigNumber = ethers.BigNumber.from('0');
+    try {
+      const filteredChains = {};
+      forEach(amounts, (value, key) => {
+        const toChainId = key.split('-')[0];
+        // if (toChainId !== chainId.toString()) {
+        filteredChains[toChainId] = value;
+        // }
+      });
+      const chainIds = [];
+      const relayerPromises = map(filteredChains, (value, key) => {
+        chainIds.push(key);
+        return axios.get(`https://www.zucco.in/?fromChain=${chainId}&toChain=${key}&amount=${value}`);
+      });
+      const relayerResults = await Promise.all(relayerPromises);
+      const chainIdToRelayerFee = {};
+      forEach(relayerResults, ({ data }, index) => {
+        let relayerFee = ethers.BigNumber.from(String(data.relayerFee));
         // Note: For Demo Purpose passing the triple relayer fee
         relayerFee = relayerFee.mul(ethers.BigNumber.from('3'));
-        slippage = ethers.BigNumber.from(String(connextSDKResponse.destinationSlippage));
-        // Note: For Demo purpose passing the slippage as 3%
-        slippage = ethers.BigNumber.from('300');
-      }
-      // TODO: Fix payload - add loop
-      const bridgeRequest: BridgeRequestStruct = {
-        destinationDomain: ethers.BigNumber.from(connextDomain[destinationChainId].toString()),
-        relayerFee: relayerFee,
-        slippage: slippage
-      };
-      const payload: VaultRequestStruct[] = [
-        {
-          routeId: routeId,
-          amount: amount,
-          vaultAddress: vaultAddress,
-          underlying: underlying,
-          onBehalfOf: await signer.getAddress(),
-          bridgeRequest: bridgeRequest
+        chainIdToRelayerFee[chainIds[index]] = relayerFee;
+      });
+
+      // const connextSDKResponse = await getConnextData(chainId, destinationChainId, amount.toString());
+      // console.log(connextSDKResponse);
+
+      // relayerFee = ethers.BigNumber.from(String(connextSDKResponse.relayerFee));
+      // Note: For Demo Purpose passing the triple relayer fee
+      // relayerFee = relayerFee.mul(ethers.BigNumber.from('3'));
+      // slippage = ethers.BigNumber.from(String(connextSDKResponse.destinationSlippage));
+      // Note: For Demo purpose passing the slippage as 3%
+      // slippage = ethers.BigNumber.from('300');
+
+      const signerAddress = await signer.getAddress();
+
+      let flagIsSameChainTx = true;
+      const payload: VaultRequestStruct[] = map(chainIdToRelayerFee, (value, key) => {
+        if (key !== chainId.toString()) {
+          flagIsSameChainTx = false;
         }
-      ];
+        relayerFee = relayerFee.add(value);
+        const bridgeRequest: BridgeRequestStruct = {
+          destinationDomain: ethers.BigNumber.from(connextDomain[key].toString()),
+          relayerFee: value,
+          slippage: ethers.BigNumber.from('300')
+        };
+        return {
+          routeId: routeId,
+          amount: amounts[`${key}-${vaultAddresses[key]}-amount`],
+          vaultAddress: vaultAddresses[key],
+          underlying: underlying,
+          onBehalfOf: signerAddress,
+          bridgeRequest: bridgeRequest
+        };
+      });
+
+      console.log({ payload });
+
       const registryContract = getRegistryContract();
-      // TODO: Relayer fee in value should be the sum of all relayer fee for each vault
+
       let tx;
-      if (destinationChainId != chainId) {
-        tx = await registryContract.connect(signer).userDepositRequest(payload, { value: relayerFee });
+      if (!flagIsSameChainTx) {
+        tx = await registryContract
+          .connect(signer)
+          .userDepositRequest(payload, { value: relayerFee, gasLimit: 250000 });
       } else {
         console.log('same chain tx');
         tx = await registryContract.connect(signer).userDepositRequest(payload);
