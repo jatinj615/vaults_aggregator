@@ -22,7 +22,7 @@ export enum SwapTypes {
 export enum PoolTypes {
   Weighted,
   Stable,
-  Unreal,
+  XVault,
   MetaStable,
   Linear
 }
@@ -76,13 +76,13 @@ export interface SubgraphPoolBase {
   tokens: SubgraphToken[];
   tokensList: string[];
 
-  // Weighted & Unreal field
+  // Weighted & XVault field
   totalWeight?: string;
 
   // Stable specific fields
   amp?: string;
 
-  // Unreal specific fields
+  // XVault specific fields
   expiryTime?: number;
   unitSeconds?: number;
   principalToken?: string;
@@ -149,7 +149,7 @@ export enum PoolFilter {
   MetaStable = 'MetaStable',
   LBP = 'LiquidityBootstrapping',
   Investment = 'Investment',
-  Unreal = 'Unreal',
+  XVault = 'XVault',
   AaveLinear = 'AaveLinear',
   StablePhantom = 'StablePhantom'
 }

@@ -1,7 +1,5 @@
 import { useTheme } from '@mui/material';
 import Image from 'next/image';
-// import UnrealLogoLight from 'assets/svg/unreal-light.svg';
-// import UnrealLogoDark from '/assets/svg/unreal-dark.svg';
 
 const LogoComponent = () => {
   const theme = useTheme();

@@ -114,7 +114,7 @@ export default function MyPortfolio({}: Props) {
         wrap="nowrap"
         mt={5}
         sx={{
-          '& .unreal-app-theme--table-card': {
+          '& .xvault-app-theme--table-card': {
             bgcolor: theme.vaggr.card.backgroundColor,
             boxShadow: '0px 10px 100px rgba(0, 0, 0, 0.06)',
             border: `2px solid ${theme.vaggr.datagrid.border.color}`,
@@ -173,7 +173,7 @@ export default function MyPortfolio({}: Props) {
             columns={getOTYTBalancesColumns()}
             rows={portfolioRowsData}
             onRowClick={handlePortfolioRowClick}
-            getRowClassName={(_params) => `unreal-app-theme--table-card`}
+            getRowClassName={(_params) => `xvault-app-theme--table-card`}
             hideFooter
             rowHeight={portfolioDatagridRowHeight}
             onSelectionModelChange={handleSelectionModelChange}

@@ -2,7 +2,7 @@
 import { ToastContextInterface, ToastDataInterface } from 'context/toastContext';
 import toast from 'react-hot-toast';
 import { isUndefined } from 'lodash-es';
-import { APP_REDIRECT_NETWORK, ChainNameFromNetworkName, SUPPORTED_NETWORK } from 'constants/networkNames';
+import { ChainNameFromNetworkName, SUPPORTED_NETWORK } from 'constants/networkNames';
 
 // Unsupported network error message
 export const showUnsupportedNetworkToast = (setToastData: ToastContextInterface['setToastData']): void => {
@@ -49,7 +49,7 @@ export const showMetamaskInstallationToast = (setToastData: ToastContextInterfac
           primaryButtonType: 'ANCHOR',
           primaryButtonText: 'TAKE ME THERE',
           linkType: 'EXTERNAL',
-          link: 'https://metamask.app.link/dapp/unreal.finance/'
+          link: 'https://metamask.app.link/'
         }
       } as ToastDataInterface;
     });
@@ -105,41 +105,6 @@ export const showAlreadyProcessingRequestToast = (setToastData: ToastContextInte
   toast.error('Already processing MetaMask connection request. Please login using the MetaMask icon to continue', {
     id
   });
-};
-
-export const showRedirectNetworkToast = (setToastData: ToastContextInterface['setToastData']): void => {
-  // * toast message
-  const id = crypto.randomUUID();
-  const link = process.env.NEXT_PUBLIC_APP_REDIRECT_URL;
-  const duration = 5000;
-
-  const timeoutID = setTimeout(() => {
-    window.location.href = link;
-  }, duration);
-
-  if (!isUndefined(setToastData)) {
-    setToastData((prevContext) => {
-      // object that we want to update
-      return {
-        // keep all other key-value pairs
-        ...(prevContext || {}),
-        [id]: {
-          title: `Go to ${ChainNameFromNetworkName[APP_REDIRECT_NETWORK]} App?`,
-          severity: 'warning',
-          primaryButtonType: 'ANCHOR',
-          primaryButtonText: 'YES',
-          linkType: 'INTERNAL',
-          link,
-          secondaryButtonType: 'BUTTON',
-          secondaryButtonText: 'NO',
-          buttonActionType: 'DISMISS',
-          timeoutID
-        }
-      } as ToastDataInterface;
-    });
-  }
-
-  toast('You will be auto-redirected in 5 seconds', { id, duration });
 };
 
 export const showNewBucketSuccess = (setToastData: ToastContextInterface['setToastData'], bucketName: string): void => {
