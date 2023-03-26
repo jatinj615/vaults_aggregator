@@ -8,12 +8,12 @@ import { SUPPORTED_NETWORKS } from 'constants/networkNames';
 import { ToastContext, ToastDataInterface } from 'context/toastContext';
 import toast from 'react-hot-toast';
 import { registries, connextDomain, ConnextWeth } from '../utils/multiChainConstants';
-import { Registry__factory } from './typechain';
 import { BigNumber } from 'ethers';
 import { filter, forEach, isUndefined, map, toString } from 'lodash-es';
 import { ExplorerDataType, getExplorerLink } from 'utils';
 import { getConnextData } from '../utils/getConnextData';
 import axios from 'axios';
+import { _abi } from './RegistryABI';
 import IObject from 'interfaces/iobject.interface';
 import { RouteIdFromChainId } from 'utils/contracts';
 
@@ -41,8 +41,7 @@ const useRegistry = () => {
   const chainId = library._network.chainId;
   const getRegistryContract = () => {
     try {
-      const registryFactory = new Registry__factory(signer);
-      const registry = registryFactory.attach(registries[chainId]);
+      const registry = new ethers.Contract(registries[chainId], _abi, signer);
       return registry;
     } catch (err) {
       console.log(err);
