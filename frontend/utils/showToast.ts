@@ -141,3 +141,49 @@ export const showRedirectNetworkToast = (setToastData: ToastContextInterface['se
 
   toast('You will be auto-redirected in 5 seconds', { id, duration });
 };
+
+export const showNewBucketSuccess = (setToastData: ToastContextInterface['setToastData'], bucketName: string): void => {
+  // * toast message
+  const id = crypto.randomUUID();
+
+  if (!isUndefined(setToastData)) {
+    setToastData((prevContext) => {
+      // object that we want to update
+      return {
+        // keep all other key-value pairs
+        ...(prevContext || {}),
+        [id]: {
+          title: 'Success',
+          severity: 'success',
+          primaryButtonType: 'ANCHOR',
+          primaryButtonText: 'VIEW BUCKETS',
+          linkType: 'INTERNAL',
+          link: '/'
+        }
+      } as ToastDataInterface;
+    });
+  }
+
+  toast.success(`Bucket '${bucketName}' created successfully!`, { id });
+};
+
+export const showNewBucketError = (setToastData: ToastContextInterface['setToastData'], errorMessage: string): void => {
+  // * toast message
+  const id = crypto.randomUUID();
+
+  if (!isUndefined(setToastData)) {
+    setToastData((prevContext) => {
+      // object that we want to update
+      return {
+        // keep all other key-value pairs
+        ...(prevContext || {}),
+        [id]: {
+          title: 'An error occurred',
+          severity: 'error'
+        }
+      } as ToastDataInterface;
+    });
+  }
+
+  toast.error(errorMessage, { id });
+};

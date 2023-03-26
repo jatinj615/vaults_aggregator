@@ -1,27 +1,39 @@
 import { Box, Button, Card, CardContent, CardHeader, Checkbox, Divider, Grid, useTheme } from '@mui/material';
 import { CheckCircle as CircleCheckedIcon, RadioButtonUnchecked as CircleUncheckedIcon } from '@mui/icons-material';
 import { darken, lighten } from '@mui/material/styles';
-import { useGetAaveData } from 'hooks/api/getAaveData';
 import SkeletonLoader from '../Common/SkeletonLoader';
 import LabelValue from '../Common/LabelValue';
 import IObject from 'interfaces/iobject.interface';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 const getHoverBackgroundColor = (theme) =>
   theme.palette.mode === 'dark'
-    ? `${darken(theme.palette.info.main, 0.3)}, ${darken(theme.palette.info.dark, 0.5)}`
+    ? `${lighten(theme.palette.secondary.main, 0.1)}, ${lighten(theme.palette.secondary.dark, 0.3)}`
     : `${lighten(theme.palette.info.main, 0.1)}, ${lighten(theme.palette.info.light, 0.4)}`;
 
 type Props = {
-  checkedState: IObject;
-  handleVaultChecked: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  aaveData: IObject[];
+  loading: boolean;
+  selectedVaults: IObject[];
+  handleVaultChecked: (checked: boolean, bucket: IObject) => void;
   handleBack: () => void;
   handleNext: () => void;
 };
 
-export default function SelectVaults({ checkedState, handleVaultChecked, handleBack, handleNext }: Props) {
+export default function SelectVaults({
+  aaveData,
+  loading,
+  selectedVaults,
+  handleVaultChecked,
+  handleBack,
+  handleNext
+}: Props) {
   const theme = useTheme();
-  const { data: aaveData = [], isLoading, isFetching } = useGetAaveData();
-  const loading = isFetching || isLoading;
+
+  const onClickVaultChecked = (e: React.ChangeEvent<HTMLInputElement>, bucket: IObject) => {
+    handleVaultChecked(e.target.checked, bucket);
+  };
 
   return (
     <Grid sx={{ height: '100%' }} container direction="column" justifyContent="center" rowSpacing={3}>
@@ -58,7 +70,9 @@ export default function SelectVaults({ checkedState, handleVaultChecked, handleB
       ) : (
         <Grid mb={2} container spacing={4}>
           {aaveData.map((bucket, index) => {
-            const checkedName = `${bucket.name}_${bucket.chainName}`;
+            const checked = selectedVaults.find(
+              (selectedVault) => selectedVault.name === bucket.name && selectedVault.chainName === bucket.chainName
+            )?.checked;
 
             return (
               <Grid key={index} xs={12} sm={6} md={4} item>
@@ -79,12 +93,11 @@ export default function SelectVaults({ checkedState, handleVaultChecked, handleB
                     subheaderTypographyProps={{ sx: { fontWeight: theme.typography.fontWeightBold } }}
                     action={
                       <Checkbox
-                        checked={checkedState?.checkedName}
-                        onChange={handleVaultChecked}
+                        checked={checked || false}
+                        onChange={(e) => onClickVaultChecked(e, bucket)}
                         icon={<CircleUncheckedIcon />}
                         checkedIcon={<CircleCheckedIcon />}
                         inputProps={{ 'aria-label': 'Add this vault' }}
-                        name={checkedName}
                       />
                     }
                   />
@@ -118,11 +131,26 @@ export default function SelectVaults({ checkedState, handleVaultChecked, handleB
         </Grid>
       )}
       <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-        <Button color="inherit" onClick={handleBack} sx={{ mr: 1 }}>
+        <Button
+          color="inherit"
+          sx={{
+            padding: theme.typography.pxToRem(12)
+          }}
+          onClick={handleBack}
+          startIcon={<ChevronLeftIcon />}
+        >
           Back
         </Button>
         <Box sx={{ flex: '1 1 auto' }} />
-        <Button onClick={handleNext}>Next</Button>
+        <Button
+          sx={{
+            padding: theme.typography.pxToRem(12)
+          }}
+          onClick={handleNext}
+          endIcon={<ChevronRightIcon />}
+        >
+          Next
+        </Button>
       </Box>
     </Grid>
   );

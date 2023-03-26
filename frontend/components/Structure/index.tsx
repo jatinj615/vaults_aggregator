@@ -151,9 +151,9 @@ export default function Structure({ children }: StructureProps) {
       <CssBaseline enableColorScheme />
 
       {/* background image */}
-      <PageBackgroundIconWrapperComponent>
+      {/* <PageBackgroundIconWrapperComponent>
         <Image src={BackgroundIcon} alt="background icon" />
-      </PageBackgroundIconWrapperComponent>
+      </PageBackgroundIconWrapperComponent> */}
 
       {/* main page content */}
       <Grid
@@ -198,7 +198,7 @@ export default function Structure({ children }: StructureProps) {
                         <CircleIcon
                           sx={{
                             '&.MuiChip-icon': {
-                              color: 'success.light',
+                              color: 'success.main',
                               fontSize: '0.6rem'
                             }
                           }}

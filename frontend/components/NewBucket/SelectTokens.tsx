@@ -11,14 +11,21 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  TextField,
   Typography,
   useTheme
 } from '@mui/material';
 import { useStoreState } from 'store/globalStore';
 import { NetworkName } from 'enums';
 import IObject from 'interfaces/iobject.interface';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 type Props = {
+  bucketName: string;
+  handleChangeBucketName: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  bucketNameError: boolean;
+  bucketNameErrorMessage: string;
   selectedTokens: string[];
   handleListChange: (e: SelectChangeEvent<string[]>) => void;
   selectTokensError: boolean;
@@ -27,6 +34,10 @@ type Props = {
 };
 
 export default function SelectTokens({
+  bucketName,
+  handleChangeBucketName,
+  bucketNameError,
+  bucketNameErrorMessage,
   selectedTokens,
   handleListChange,
   selectTokensError,
@@ -49,6 +60,17 @@ export default function SelectTokens({
         <Typography>
           Current Network: {network && network === NetworkName.MAINNET ? 'mainnet' : network || NetworkName.GOERLI}
         </Typography>
+      </Grid>
+      <Grid item>
+        <TextField
+          error={bucketNameError}
+          required
+          label="Enter a bucket name"
+          value={bucketName}
+          onChange={handleChangeBucketName}
+          helperText={bucketNameErrorMessage}
+          fullWidth
+        />
       </Grid>
       <Grid item>
         <FormControl error={selectTokensError} fullWidth>
@@ -78,11 +100,27 @@ export default function SelectTokens({
         </FormControl>
       </Grid>
       <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-        <Button color="inherit" disabled onClick={handleBack} sx={{ mr: 1 }}>
+        <Button
+          color="inherit"
+          disabled
+          sx={{
+            padding: theme.typography.pxToRem(12)
+          }}
+          onClick={handleBack}
+          startIcon={<ChevronLeftIcon />}
+        >
           Back
         </Button>
         <Box sx={{ flex: '1 1 auto' }} />
-        <Button onClick={handleNext}>Next</Button>
+        <Button
+          sx={{
+            padding: theme.typography.pxToRem(12)
+          }}
+          onClick={handleNext}
+          endIcon={<ChevronRightIcon />}
+        >
+          Next
+        </Button>
       </Box>
     </Grid>
   );

@@ -10,5 +10,6 @@ export enum CurrencySymbol {
   'USD COIN' = 'USDC',
   'USDT' = 'USDT',
   'aEthDAI' = 'aEthDAI',
-  'cUSDC' = 'cUSDC'
+  'cUSDC' = 'cUSDC',
+  'WETH' = 'WETH'
 }
